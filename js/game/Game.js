@@ -117,17 +117,35 @@ export class Game {
             // Check for paddle hits and trigger haptics
             const currentBallZ = this.ball.getBall().position.z;
             
-            // Front paddle hit
+            // Front player paddle hit
             if (prevBallZ > -0.2 && currentBallZ <= -0.2) {
                 const ballSpeed = this.ball.ballVelocity.length();
                 const normalizedSpeed = Math.min(ballSpeed / this.ball.maxSpeed, 1.0);
                 this.triggerPaddleHaptics(normalizedSpeed * 0.8 + 0.2, 50);
             }
             
-            // Side paddle hit
+            // Side player paddle hit
             if (Math.abs(this.ball.getBall().position.x - prevBallX) > 0.01 &&
                 currentBallZ > -0.2 && currentBallZ < 0) {
                 this.triggerPaddleHaptics(0.3, 50); // Lighter haptics for side hits
+            }
+
+            // AI paddle hit - double pulse with lower intensity
+            if (prevBallZ < -1.8 && currentBallZ >= -1.8) {
+                const ballSpeed = this.ball.ballVelocity.length();
+                const normalizedSpeed = Math.min(ballSpeed / this.ball.maxSpeed, 1.0);
+                // First pulse
+                this.triggerPaddleHaptics(normalizedSpeed * 0.4, 20);
+                // Second pulse after a tiny delay
+                setTimeout(() => {
+                    this.triggerPaddleHaptics(normalizedSpeed * 0.3, 20);
+                }, 40);
+            }
+
+            // AI paddle side hit
+            if (Math.abs(this.ball.getBall().position.x - prevBallX) > 0.01 &&
+                currentBallZ < -1.8 && currentBallZ > -2.0) {
+                this.triggerPaddleHaptics(0.15, 40); // Very light haptics for AI side hits
             }
 
             this.renderer.render(this.scene, this.camera);
