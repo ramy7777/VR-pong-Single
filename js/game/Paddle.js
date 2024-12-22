@@ -4,6 +4,9 @@ export class Paddle {
     constructor(scene, isAI = false) {
         this.scene = scene;
         this.isAI = isAI;
+        this.width = 0.3;      // Keep width the same for reasonable hit area
+        this.height = 0.1;     // Keep height the same for visibility
+        this.depth = 0.02;     // Make it much thinner (was 0.1)
         this.targetPosition = new THREE.Vector3();
         this.smoothSpeed = 0.18; // Increased from 0.15 for faster movement
         this.lastPredictedX = 0;
@@ -13,7 +16,7 @@ export class Paddle {
     }
 
     createPaddle() {
-        const paddleGeometry = new THREE.BoxGeometry(0.3, 0.1, 0.1);
+        const paddleGeometry = new THREE.BoxGeometry(this.width, this.height, this.depth);
         const paddleMaterial = new THREE.MeshStandardMaterial({
             color: this.isAI ? 0xff0000 : 0x00ff00,
             emissive: this.isAI ? 0xff0000 : 0x00ff00,

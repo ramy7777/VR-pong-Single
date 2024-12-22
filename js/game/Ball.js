@@ -56,30 +56,26 @@ export class Ball {
         return new THREE.Vector3(xComponent, 0, zComponent);
     }
 
-    checkPaddleCollision(paddlePosition, isFrontPaddle) {
-        const paddleWidth = 0.3;
-        const paddleDepth = 0.1;
-        const ballRadius = 0.02;
-
-        if (Math.abs(this.ball.position.y - paddlePosition.y) > paddleDepth) {
-            return false;
-        }
-
-        const dx = Math.abs(this.ball.position.x - paddlePosition.x);
-        const dz = Math.abs(this.ball.position.z - paddlePosition.z);
+    checkPaddleCollision(paddle) {
+        const paddleBox = new THREE.Box3().setFromObject(paddle);
+        const ballBox = new THREE.Box3().setFromObject(this.ball);
         
-        if (dx > (paddleWidth/2 + ballRadius) || dz > (paddleDepth/2 + ballRadius)) {
-            return false;
-        }
-
-        const isSideHit = dx > paddleWidth/2;
+        // Expand the paddle's collision box slightly for better gameplay
+        paddleBox.min.z -= 0.01;  
+        paddleBox.max.z += 0.01;  
         
-        if (isSideHit) {
-            this.ballVelocity.x *= -0.8;
-            return false;
+        if (ballBox.intersectsBox(paddleBox)) {
+            const isSideHit = Math.abs(this.ball.position.x - paddle.position.x) > paddle.scale.x / 2;
+            
+            if (isSideHit) {
+                this.ballVelocity.x *= -0.8;
+                return false;
+            }
+
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     update(delta, playerPaddle, aiPaddle) {
@@ -90,7 +86,7 @@ export class Ball {
         }
 
         if (this.ball.position.z > -0.2 && this.ball.position.z < 0) {
-            if (this.checkPaddleCollision(playerPaddle.position, true)) {
+            if (this.checkPaddleCollision(playerPaddle)) {
                 this.ballVelocity.copy(this.calculateReflectionAngle(
                     this.ball.position,
                     playerPaddle.position
@@ -104,7 +100,7 @@ export class Ball {
         }
 
         if (this.ball.position.z < -1.8 && this.ball.position.z > -2.0) {
-            if (this.checkPaddleCollision(aiPaddle.position, false)) {
+            if (this.checkPaddleCollision(aiPaddle)) {
                 this.ballVelocity.z *= -1;
                 this.ballVelocity.x += (Math.random() - 0.5) * 0.005;
                 

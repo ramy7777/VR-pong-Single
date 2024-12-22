@@ -119,7 +119,7 @@ export class Game {
             const currentBallX = this.ball.getBall().position.x;
 
             // Player paddle hit - only when ball is actually hit by paddle
-            if (prevBallZ > -0.2 && currentBallZ <= -0.2 && 
+            if (prevBallZ > -0.12 && currentBallZ <= -0.12 && 
                 Math.abs(this.ball.getBall().position.x - this.playerPaddle.getPaddle().position.x) < 0.15) {
                 const ballSpeed = this.ball.ballVelocity.length();
                 const normalizedSpeed = Math.min(ballSpeed / this.ball.maxSpeed, 1.0);
@@ -129,13 +129,13 @@ export class Game {
 
             // Player paddle side hit
             if (Math.abs(currentBallX - prevBallX) > 0.01 &&
-                currentBallZ > -0.2 && currentBallZ < 0) {
+                currentBallZ > -0.12 && currentBallZ < 0) {
                 this.triggerPaddleHaptics(0.3, 50);
                 this.soundManager.playPaddleHit();
             }
 
             // AI paddle hit
-            if (prevBallZ < -1.8 && currentBallZ >= -1.8) {
+            if (prevBallZ < -1.92 && currentBallZ >= -1.92) {
                 const ballSpeed = this.ball.ballVelocity.length();
                 const normalizedSpeed = Math.min(ballSpeed / this.ball.maxSpeed, 1.0);
                 this.triggerPaddleHaptics(normalizedSpeed * 0.4, 20);
@@ -148,7 +148,7 @@ export class Game {
             }
 
             // Ball passes player paddle (losing)
-            if (prevBallZ > -0.2 && currentBallZ <= -0.2 && 
+            if (prevBallZ > -0.12 && currentBallZ <= -0.12 && 
                 Math.abs(this.ball.getBall().position.x - this.playerPaddle.getPaddle().position.x) >= 0.15) {
                 this.soundManager.playLose();
                 this.triggerPaddleHaptics(0.2, 100); // Light haptic feedback for missing
