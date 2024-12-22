@@ -118,8 +118,24 @@ export class Game {
             // Handle paddle hits
             if (collision === 'player') {
                 this.soundManager.playPaddleHit();
+                const session = this.renderer.xr.getSession();
+                if (session) {
+                    session.inputSources.forEach(inputSource => {
+                        if (inputSource.handedness === 'right' && inputSource.gamepad?.hapticActuators?.[0]) {
+                            inputSource.gamepad.hapticActuators[0].pulse(1.0, 100);
+                        }
+                    });
+                }
             } else if (collision === 'ai') {
                 this.soundManager.playAIHit();
+                const session = this.renderer.xr.getSession();
+                if (session) {
+                    session.inputSources.forEach(inputSource => {
+                        if (inputSource.handedness === 'right' && inputSource.gamepad?.hapticActuators?.[0]) {
+                            inputSource.gamepad.hapticActuators[0].pulse(0.5, 50);
+                        }
+                    });
+                }
             }
 
             const currentBallZ = this.ball.getBall().position.z;
@@ -128,15 +144,39 @@ export class Game {
             // Wall bounce
             if (Math.abs(currentBallX) > 0.65 && Math.abs(prevBallX) <= 0.65) {
                 this.soundManager.playWallBounce();
+                const session = this.renderer.xr.getSession();
+                if (session) {
+                    session.inputSources.forEach(inputSource => {
+                        if (inputSource.handedness === 'right' && inputSource.gamepad?.hapticActuators?.[0]) {
+                            inputSource.gamepad.hapticActuators[0].pulse(0.3, 50);
+                        }
+                    });
+                }
             }
 
             // Ball hits back collider (scoring)
             if (currentBallZ > 1.0 && prevBallZ <= 1.0) {
                 // AI scores
                 this.soundManager.playLose();
+                const session = this.renderer.xr.getSession();
+                if (session) {
+                    session.inputSources.forEach(inputSource => {
+                        if (inputSource.handedness === 'right' && inputSource.gamepad?.hapticActuators?.[0]) {
+                            inputSource.gamepad.hapticActuators[0].pulse(0.7, 100);
+                        }
+                    });
+                }
             } else if (currentBallZ < -3.0 && prevBallZ >= -3.0) {
                 // Player scores
                 this.soundManager.playLose();
+                const session = this.renderer.xr.getSession();
+                if (session) {
+                    session.inputSources.forEach(inputSource => {
+                        if (inputSource.handedness === 'right' && inputSource.gamepad?.hapticActuators?.[0]) {
+                            inputSource.gamepad.hapticActuators[0].pulse(0.7, 100);
+                        }
+                    });
+                }
             }
 
             this.renderer.render(this.scene, this.camera);
