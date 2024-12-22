@@ -10,10 +10,30 @@ class VRPongGame {
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.clock = new THREE.Clock();
         
+        // Player movement and rotation settings
+        this.moveSpeed = 0.05;
+        this.rotateSpeed = 0.05;
+        this.snapAngle = 25 * (Math.PI / 180); // 25 degrees in radians
+        this.rotationCooldown = 0;
+        this.rotationCooldownTime = 250; // milliseconds
+        this.lastRotationTime = 0;
+        
+        this.playerGroup = new THREE.Group(); // Group to hold camera and controllers
+        this.scene.add(this.playerGroup);
+        this.playerGroup.add(this.camera);
+
+        // Controller states
+        this.controllerStates = {
+            left: { touching: false, gripping: false, lastPosition: new THREE.Vector3() },
+            right: { touching: false, gripping: false, lastPosition: new THREE.Vector3(), thumbstickPressed: false }
+        };
+
         this.init();
         this.setupVR();
         this.createEnvironment();
-        this.createGameElements();
+        this.createTable();
+        this.createPaddle();
+        this.createBall();
         this.animate();
     }
 
@@ -89,11 +109,11 @@ class VRPongGame {
 
         // Left Controller (0)
         this.controllers[0] = this.renderer.xr.getController(0);
-        this.scene.add(this.controllers[0]);
+        this.playerGroup.add(this.controllers[0]);
 
         // Right Controller (1)
         this.controllers[1] = this.renderer.xr.getController(1);
-        this.scene.add(this.controllers[1]);
+        this.playerGroup.add(this.controllers[1]);
 
         // Add controller models
         const controllerModelFactory = new XRControllerModelFactory();
@@ -101,17 +121,17 @@ class VRPongGame {
         // Left Controller Grip
         this.controllerGrips[0] = this.renderer.xr.getControllerGrip(0);
         this.controllerGrips[0].add(controllerModelFactory.createControllerModel(this.controllerGrips[0]));
-        this.scene.add(this.controllerGrips[0]);
+        this.playerGroup.add(this.controllerGrips[0]);
 
         // Right Controller Grip
         this.controllerGrips[1] = this.renderer.xr.getControllerGrip(1);
         this.controllerGrips[1].add(controllerModelFactory.createControllerModel(this.controllerGrips[1]));
-        this.scene.add(this.controllerGrips[1]);
+        this.playerGroup.add(this.controllerGrips[1]);
 
         // Initialize controller states
         this.controllerStates = {
-            left: { touching: false, gripping: false },
-            right: { touching: false, gripping: false }
+            left: { touching: false, gripping: false, lastPosition: new THREE.Vector3() },
+            right: { touching: false, gripping: false, lastPosition: new THREE.Vector3(), thumbstickPressed: false }
         };
 
         // Store the active controller for paddle control
@@ -144,7 +164,67 @@ class VRPongGame {
         if (!inputSource || !inputSource.gamepad) return;
 
         const gamepad = inputSource.gamepad;
+        const currentTime = Date.now();
         
+        // Handle thumbstick input
+        if (gamepad.axes.length >= 4) {
+            // Get thumbstick values
+            const thumbstickX = gamepad.axes[2]; // X-axis of the thumbstick
+            const thumbstickY = gamepad.axes[3]; // Y-axis of the thumbstick
+
+            // Apply movement or rotation based on controller side
+            if (side === 'left') {
+                // Left thumbstick controls movement
+                if (Math.abs(thumbstickX) > 0.1 || Math.abs(thumbstickY) > 0.1) {
+                    // Calculate movement direction relative to player's facing direction
+                    const moveX = thumbstickX * this.moveSpeed;
+                    const moveZ = -thumbstickY * this.moveSpeed;
+
+                    // Get the player's forward direction
+                    const forward = new THREE.Vector3(0, 0, -1);
+                    forward.applyQuaternion(this.playerGroup.quaternion);
+
+                    // Calculate right vector
+                    const right = new THREE.Vector3(1, 0, 0);
+                    right.applyQuaternion(this.playerGroup.quaternion);
+
+                    // Move the player group
+                    this.playerGroup.position.add(right.multiplyScalar(moveX));
+                    this.playerGroup.position.add(forward.multiplyScalar(moveZ));
+
+                    // Provide haptic feedback for movement
+                    if (gamepad.hapticActuators && gamepad.hapticActuators.length > 0) {
+                        const intensity = Math.min(Math.sqrt(moveX * moveX + moveZ * moveZ), 0.5);
+                        gamepad.hapticActuators[0].pulse(intensity, 16);
+                    }
+                }
+            } else if (side === 'right') {
+                // Right thumbstick controls snap rotation
+                const wasPressed = this.controllerStates[side].thumbstickPressed;
+                const isPressed = Math.abs(thumbstickX) > 0.7; // Higher threshold for snap rotation
+
+                // Check if thumbstick just crossed the threshold
+                if (isPressed && !wasPressed && currentTime - this.lastRotationTime > this.rotationCooldownTime) {
+                    // Determine rotation direction
+                    const rotationDirection = Math.sign(thumbstickX);
+                    
+                    // Apply snap rotation
+                    this.playerGroup.rotateY(-this.snapAngle * rotationDirection);
+                    
+                    // Provide haptic feedback for rotation
+                    if (gamepad.hapticActuators && gamepad.hapticActuators.length > 0) {
+                        gamepad.hapticActuators[0].pulse(0.5, 50); // Stronger, longer pulse for snap rotation
+                    }
+
+                    // Update last rotation time
+                    this.lastRotationTime = currentTime;
+                }
+
+                // Update thumbstick state
+                this.controllerStates[side].thumbstickPressed = isPressed;
+            }
+        }
+
         // Check if controller is touching paddle
         const controllerPosition = new THREE.Vector3();
         controller.getWorldPosition(controllerPosition);
@@ -160,11 +240,6 @@ class VRPongGame {
 
         // Check grip button (Button 1 in mapping)
         const isGripping = gamepad.buttons[1] && gamepad.buttons[1].pressed;
-
-        // Store previous position if this is the active controller
-        if (!this.controllerStates[side].lastPosition) {
-            this.controllerStates[side].lastPosition = new THREE.Vector3();
-        }
         
         // Debug output for button states
         if (this.controllerStates[side].touching) {
@@ -172,19 +247,16 @@ class VRPongGame {
                 touching: this.controllerStates[side].touching,
                 gripping: isGripping,
                 distance: distance,
-                buttonStates: gamepad.buttons.map((b, i) => ({
-                    index: i,
-                    pressed: b.pressed,
-                    touched: b.touched,
-                    value: b.value
-                }))
+                thumbstick: side === 'left' ? 
+                    { x: gamepad.axes[2], y: gamepad.axes[3] } : 
+                    { x: gamepad.axes[2], y: gamepad.axes[3] }
             });
         }
 
         const wasGripping = this.controllerStates[side].gripping;
         this.controllerStates[side].gripping = isGripping;
 
-        // Handle state changes
+        // Handle paddle control
         if (this.controllerStates[side].touching) {
             if (isGripping && !wasGripping) {
                 // Just started gripping while touching
@@ -193,7 +265,7 @@ class VRPongGame {
                 
                 // Strong haptic feedback for initial grab
                 if (gamepad.hapticActuators && gamepad.hapticActuators.length > 0) {
-                    gamepad.hapticActuators[0].pulse(1.0, 100); // Strong pulse for grab
+                    gamepad.hapticActuators[0].pulse(1.0, 100);
                 }
             }
         }
@@ -208,9 +280,8 @@ class VRPongGame {
 
             // Provide haptic feedback based on movement
             if (movement > 0.001 && gamepad.hapticActuators && gamepad.hapticActuators.length > 0) {
-                // Intensity based on movement speed (clamped between 0.1 and 0.5)
                 const intensity = THREE.MathUtils.clamp(movement * 10, 0.1, 0.5);
-                gamepad.hapticActuators[0].pulse(intensity, 16); // Short pulse every frame while moving
+                gamepad.hapticActuators[0].pulse(intensity, 16);
             }
         }
 
@@ -262,7 +333,7 @@ class VRPongGame {
         this.scene.add(rightWall);
     }
 
-    createGameElements() {
+    createTable() {
         // Create table (standard dining table is about 1.5m x 0.9m)
         const tableGeometry = new THREE.BoxGeometry(1.5, 0.1, 2);
         const tableMaterial = new THREE.MeshStandardMaterial({
@@ -275,7 +346,9 @@ class VRPongGame {
         this.table.position.y = 0.8; // Standard table height
         this.table.position.z = -1.0; // Table 1m in front of spawn point
         this.scene.add(this.table);
+    }
 
+    createPaddle() {
         // Create paddle (scaled down to match table size)
         const paddleGeometry = new THREE.BoxGeometry(0.3, 0.1, 0.1);
         const paddleMaterial = new THREE.MeshStandardMaterial({
@@ -286,7 +359,9 @@ class VRPongGame {
         this.paddle = new THREE.Mesh(paddleGeometry, paddleMaterial);
         this.paddle.position.set(0, 0.9, -0.1); // Position paddle at near end of table
         this.scene.add(this.paddle);
+    }
 
+    createBall() {
         // Create ball (scaled down to match table size)
         const ballGeometry = new THREE.SphereGeometry(0.02);
         const ballMaterial = new THREE.MeshStandardMaterial({
