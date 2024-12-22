@@ -78,7 +78,7 @@ export class VRController {
         const distance = controllerPosition.distanceTo(paddlePosition);
 
         const wasTouching = this.controllerStates[side].touching;
-        this.controllerStates[side].touching = distance < 0.1;
+        this.controllerStates[side].touching = distance < 0.2; // Increased from 0.1 to 0.2 for larger grab area
 
         const isGripping = gamepad.buttons[1]?.pressed;
         const wasGripping = this.controllerStates[side].gripping;
@@ -90,7 +90,7 @@ export class VRController {
                 this.activeController = controller;
                 
                 if (gamepad.hapticActuators?.[0]) {
-                    gamepad.hapticActuators[0].pulse(1.0, 100);
+                    gamepad.hapticActuators[0].pulse(0.5, 50); // Lighter haptic feedback when grabbing
                 }
             }
         }
