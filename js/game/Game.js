@@ -113,54 +113,30 @@ export class Game {
             const prevBallX = this.ball.getBall().position.x;
 
             this.aiPaddle.updateAI(this.ball.getBall());
-            this.ball.update(delta, this.playerPaddle.getPaddle(), this.aiPaddle.getPaddle());
+            const collision = this.ball.update(delta, this.playerPaddle.getPaddle(), this.aiPaddle.getPaddle());
+
+            // Handle paddle hits
+            if (collision === 'player') {
+                this.soundManager.playPaddleHit();
+            } else if (collision === 'ai') {
+                this.soundManager.playAIHit();
+            }
 
             const currentBallZ = this.ball.getBall().position.z;
             const currentBallX = this.ball.getBall().position.x;
 
-            // Player paddle hit - only when ball is actually hit by paddle
-            if (prevBallZ > -0.12 && currentBallZ <= -0.12 && 
-                Math.abs(this.ball.getBall().position.x - this.playerPaddle.getPaddle().position.x) < 0.15) {
-                const ballSpeed = this.ball.ballVelocity.length();
-                const normalizedSpeed = Math.min(ballSpeed / this.ball.maxSpeed, 1.0);
-                this.triggerPaddleHaptics(normalizedSpeed * 0.8 + 0.2, 50);
-                this.soundManager.playPaddleHit();
-            }
-
-            // Player paddle side hit
-            if (Math.abs(currentBallX - prevBallX) > 0.01 &&
-                currentBallZ > -0.12 && currentBallZ < 0) {
-                this.triggerPaddleHaptics(0.3, 50);
-                this.soundManager.playPaddleHit();
-            }
-
-            // AI paddle hit
-            if (prevBallZ < -1.92 && currentBallZ >= -1.92) {
-                const ballSpeed = this.ball.ballVelocity.length();
-                const normalizedSpeed = Math.min(ballSpeed / this.ball.maxSpeed, 1.0);
-                this.triggerPaddleHaptics(normalizedSpeed * 0.4, 20);
-                this.soundManager.playAIHit();
-            }
-
-            // Wall bounce - only trigger when ball hits the wall from inside
+            // Wall bounce
             if (Math.abs(currentBallX) > 0.65 && Math.abs(prevBallX) <= 0.65) {
                 this.soundManager.playWallBounce();
             }
 
-            // Ball passes player paddle (losing)
-            if (prevBallZ > -0.12 && currentBallZ <= -0.12 && 
-                Math.abs(this.ball.getBall().position.x - this.playerPaddle.getPaddle().position.x) >= 0.15) {
+            // Ball hits back collider (scoring)
+            if (currentBallZ > 1.0 && prevBallZ <= 1.0) {
+                // AI scores
                 this.soundManager.playLose();
-                this.triggerPaddleHaptics(0.2, 100); // Light haptic feedback for missing
-            }
-
-            // Scoring events
-            if (currentBallZ > 0) {
-                // AI scores against player
+            } else if (currentBallZ < -3.0 && prevBallZ >= -3.0) {
+                // Player scores
                 this.soundManager.playLose();
-            } else if (currentBallZ < -2.0 && prevBallZ >= -2.0) {
-                // Player scores against AI
-                this.soundManager.playPoint();
             }
 
             this.renderer.render(this.scene, this.camera);

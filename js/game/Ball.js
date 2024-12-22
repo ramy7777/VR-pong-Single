@@ -79,12 +79,18 @@ export class Ball {
     }
 
     update(delta, playerPaddle, aiPaddle) {
+        const prevX = this.ball.position.x;
+        const prevZ = this.ball.position.z;
+        
         this.ball.position.add(this.ballVelocity);
 
+        // Side wall collision
         if (this.ball.position.x > 0.7 || this.ball.position.x < -0.7) {
+            this.ball.position.x = Math.sign(this.ball.position.x) * 0.7;
             this.ballVelocity.x *= -1;
         }
 
+        // Player paddle collision
         if (this.ball.position.z > -0.2 && this.ball.position.z < 0) {
             if (this.checkPaddleCollision(playerPaddle)) {
                 this.ballVelocity.copy(this.calculateReflectionAngle(
@@ -96,9 +102,11 @@ export class Ball {
                 if (this.hits % 2 === 0) {
                     this.increaseSpeed();
                 }
+                return 'player';
             }
         }
 
+        // AI paddle collision
         if (this.ball.position.z < -1.8 && this.ball.position.z > -2.0) {
             if (this.checkPaddleCollision(aiPaddle)) {
                 this.ballVelocity.z *= -1;
@@ -108,6 +116,7 @@ export class Ball {
                 if (this.hits % 2 === 0) {
                     this.increaseSpeed();
                 }
+                return 'ai';
             }
         }
 
@@ -115,6 +124,6 @@ export class Ball {
             this.resetPosition();
         }
 
-        this.ball.position.y = 0.9;
+        return false;
     }
 }
