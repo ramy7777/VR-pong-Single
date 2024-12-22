@@ -118,8 +118,9 @@ export class Game {
             const currentBallZ = this.ball.getBall().position.z;
             const currentBallX = this.ball.getBall().position.x;
 
-            // Player paddle hit
-            if (prevBallZ > -0.2 && currentBallZ <= -0.2) {
+            // Player paddle hit - only when ball is actually hit by paddle
+            if (prevBallZ > -0.2 && currentBallZ <= -0.2 && 
+                Math.abs(this.ball.getBall().position.x - this.playerPaddle.getPaddle().position.x) < 0.15) {
                 const ballSpeed = this.ball.ballVelocity.length();
                 const normalizedSpeed = Math.min(ballSpeed / this.ball.maxSpeed, 1.0);
                 this.triggerPaddleHaptics(normalizedSpeed * 0.8 + 0.2, 50);
@@ -141,16 +142,25 @@ export class Game {
                 this.soundManager.playAIHit();
             }
 
-            // Wall bounce
-            if (Math.abs(currentBallX - prevBallX) > 0.01 &&
-                (Math.abs(currentBallX) > 0.65 || Math.abs(prevBallX) > 0.65)) {
+            // Wall bounce - only trigger when ball hits the wall from inside
+            if (Math.abs(currentBallX) > 0.65 && Math.abs(prevBallX) <= 0.65) {
                 this.soundManager.playWallBounce();
             }
 
-            // Scoring
-            if ((currentBallZ > 0 && prevBallZ <= 0) || 
-                (currentBallZ < -2.0 && prevBallZ >= -2.0)) {
-                this.soundManager.playScore();
+            // Ball passes player paddle (losing)
+            if (prevBallZ > -0.2 && currentBallZ <= -0.2 && 
+                Math.abs(this.ball.getBall().position.x - this.playerPaddle.getPaddle().position.x) >= 0.15) {
+                this.soundManager.playLose();
+                this.triggerPaddleHaptics(0.2, 100); // Light haptic feedback for missing
+            }
+
+            // Scoring events
+            if (currentBallZ > 0) {
+                // AI scores against player
+                this.soundManager.playLose();
+            } else if (currentBallZ < -2.0 && prevBallZ >= -2.0) {
+                // Player scores against AI
+                this.soundManager.playPoint();
             }
 
             this.renderer.render(this.scene, this.camera);
