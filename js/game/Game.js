@@ -55,7 +55,8 @@ export class Game {
 
     createGameElements() {
         this.environment = new GameEnvironment(this.scene);
-        this.paddle = new Paddle(this.scene);
+        this.playerPaddle = new Paddle(this.scene, false); // Player paddle
+        this.aiPaddle = new Paddle(this.scene, true);     // AI paddle
         this.ball = new Ball(this.scene);
     }
 
@@ -68,17 +69,20 @@ export class Game {
                 this.vrController.checkControllerState(
                     this.vrController.controllers[0],
                     'left',
-                    this.paddle.getPaddle()
+                    this.playerPaddle.getPaddle()
                 );
                 this.vrController.checkControllerState(
                     this.vrController.controllers[1],
                     'right',
-                    this.paddle.getPaddle()
+                    this.playerPaddle.getPaddle()
                 );
             }
 
+            // Update AI paddle
+            this.aiPaddle.updateAI(this.ball.getBall());
+
             // Update ball physics
-            this.ball.update(delta, this.paddle.getPaddle());
+            this.ball.update(delta, this.playerPaddle.getPaddle(), this.aiPaddle.getPaddle());
 
             this.renderer.render(this.scene, this.camera);
         });

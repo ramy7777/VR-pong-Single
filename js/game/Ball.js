@@ -29,7 +29,7 @@ export class Ball {
         return this.ball;
     }
 
-    update(delta, paddle) {
+    update(delta, playerPaddle, aiPaddle) {
         // Update ball position
         this.ball.position.add(this.ballVelocity);
 
@@ -38,17 +38,26 @@ export class Ball {
             this.ballVelocity.x *= -1;
         }
 
-        // Ball-paddle collision
+        // Ball-player paddle collision
         if (this.ball.position.z > -0.2 && this.ball.position.z < 0) {
-            if (Math.abs(this.ball.position.x - paddle.position.x) < 0.2) {
+            if (Math.abs(this.ball.position.x - playerPaddle.position.x) < 0.2) {
                 this.ballVelocity.z *= -1;
                 // Add some random x velocity for variety (reduced)
                 this.ballVelocity.x += (Math.random() - 0.5) * 0.005;
             }
         }
 
-        // Reset ball if it goes past paddle
-        if (this.ball.position.z > 0) {
+        // Ball-AI paddle collision
+        if (this.ball.position.z < -1.8 && this.ball.position.z > -2.0) {
+            if (Math.abs(this.ball.position.x - aiPaddle.position.x) < 0.2) {
+                this.ballVelocity.z *= -1;
+                // Add some random x velocity for variety (reduced)
+                this.ballVelocity.x += (Math.random() - 0.5) * 0.005;
+            }
+        }
+
+        // Reset ball if it goes past either paddle
+        if (this.ball.position.z > 0 || this.ball.position.z < -2.0) {
             this.resetPosition();
         }
 
