@@ -5,7 +5,7 @@ export class Paddle {
         this.scene = scene;
         this.isAI = isAI;
         this.targetPosition = new THREE.Vector3();
-        this.smoothSpeed = 0.15; // Increased for faster response
+        this.smoothSpeed = 0.18; // Increased from 0.15 for faster movement
         this.lastPredictedX = 0;
         this.lastUpdateTime = 0;
         this.updateInterval = 50; // Update more frequently
