@@ -63,12 +63,12 @@ export class GameEnvironment {
         const tableGeometry = new THREE.BoxGeometry(1.5, 0.02, 2);
         const tableMaterial = new THREE.MeshStandardMaterial({
             color: 0x00ffff,
-            roughness: 0.2,
-            metalness: 0.8,
+            metalness: 0.9,
+            roughness: 0.1,
             transparent: true,
-            opacity: 0.7,
-            emissive: 0x00ffff,
-            emissiveIntensity: 0.3
+            opacity: 0.4,
+            emissive: 0x003333,
+            emissiveIntensity: 0.2
         });
         this.table = new THREE.Mesh(tableGeometry, tableMaterial);
         this.table.position.y = 0.8;

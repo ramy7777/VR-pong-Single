@@ -12,6 +12,7 @@ export class Ball {
     }
 
     createBall() {
+        // Create the main ball
         const ballGeometry = new THREE.SphereGeometry(0.02, 32, 32);
         const ballMaterial = new THREE.MeshStandardMaterial({
             color: 0x00ffff,
@@ -26,15 +27,11 @@ export class Ball {
         this.resetPosition();
         this.scene.add(this.ball);
 
-        // Add glow effect
-        const glowGeometry = new THREE.SphereGeometry(0.025, 32, 32);
-        const glowMaterial = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
-            transparent: true,
-            opacity: 0.3
-        });
-        const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-        this.ball.add(glow);
+        // Create point light for ball reflection
+        this.ballLight = new THREE.PointLight(0x00ffff, 2.0, 0.5);
+        this.ballLight.position.copy(this.ball.position);
+        this.ballLight.position.y -= 0.1; // Position light slightly below ball
+        this.scene.add(this.ballLight);
     }
 
     resetPosition() {
@@ -97,6 +94,10 @@ export class Ball {
         const prevZ = this.ball.position.z;
         
         this.ball.position.add(this.ballVelocity);
+        
+        // Update light position to follow ball
+        this.ballLight.position.copy(this.ball.position);
+        this.ballLight.position.y -= 0.1; // Keep light slightly below ball
 
         // Side wall collision
         if (this.ball.position.x > 0.7 || this.ball.position.x < -0.7) {
