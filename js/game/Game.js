@@ -5,6 +5,7 @@ import { VRController } from '../controllers/VRController.js';
 import { GameEnvironment } from '../environment/GameEnvironment.js';
 import { Paddle } from './Paddle.js';
 import { Ball } from './Ball.js';
+import { SoundManager } from '../audio/SoundManager.js';
 
 export class Game {
     constructor() {
@@ -16,6 +17,9 @@ export class Game {
         this.playerGroup = new THREE.Group();
         this.scene.add(this.playerGroup);
         this.playerGroup.add(this.camera);
+
+        // Initialize sound manager
+        this.soundManager = new SoundManager();
 
         this.init();
         this.setupVR();
@@ -62,9 +66,12 @@ export class Game {
         this.playerPaddle = new Paddle(this.scene, false);
         this.aiPaddle = new Paddle(this.scene, true);
         
-        // Track last hit time to prevent multiple haptics
         this.lastHitTime = 0;
-        this.hitCooldown = 100; // 100ms cooldown between haptics
+        this.hitCooldown = 100;
+
+        // Track previous ball position for sound triggers
+        this.prevBallZ = this.ball.getBall().position.z;
+        this.prevBallX = this.ball.getBall().position.x;
     }
 
     triggerPaddleHaptics(intensity = 1.0, duration = 100) {
@@ -76,7 +83,6 @@ export class Game {
         const session = this.renderer.xr.getSession();
         if (!session) return;
 
-        // Try both controllers
         session.inputSources.forEach(inputSource => {
             if (inputSource.gamepad?.hapticActuators?.[0]) {
                 inputSource.gamepad.hapticActuators[0].pulse(intensity, duration);
@@ -90,7 +96,6 @@ export class Game {
         this.renderer.setAnimationLoop(() => {
             const delta = this.clock.getDelta();
 
-            // Update controller states
             if (this.vrController) {
                 this.vrController.checkControllerState(
                     this.vrController.controllers[0],
@@ -104,48 +109,48 @@ export class Game {
                 );
             }
 
-            // Store previous ball position
             const prevBallZ = this.ball.getBall().position.z;
             const prevBallX = this.ball.getBall().position.x;
 
-            // Update AI paddle
             this.aiPaddle.updateAI(this.ball.getBall());
-
-            // Update ball physics
             this.ball.update(delta, this.playerPaddle.getPaddle(), this.aiPaddle.getPaddle());
 
-            // Check for paddle hits and trigger haptics
             const currentBallZ = this.ball.getBall().position.z;
-            
-            // Front player paddle hit
+            const currentBallX = this.ball.getBall().position.x;
+
+            // Player paddle hit
             if (prevBallZ > -0.2 && currentBallZ <= -0.2) {
                 const ballSpeed = this.ball.ballVelocity.length();
                 const normalizedSpeed = Math.min(ballSpeed / this.ball.maxSpeed, 1.0);
                 this.triggerPaddleHaptics(normalizedSpeed * 0.8 + 0.2, 50);
-            }
-            
-            // Side player paddle hit
-            if (Math.abs(this.ball.getBall().position.x - prevBallX) > 0.01 &&
-                currentBallZ > -0.2 && currentBallZ < 0) {
-                this.triggerPaddleHaptics(0.3, 50); // Lighter haptics for side hits
+                this.soundManager.playPaddleHit();
             }
 
-            // AI paddle hit - double pulse with lower intensity
+            // Player paddle side hit
+            if (Math.abs(currentBallX - prevBallX) > 0.01 &&
+                currentBallZ > -0.2 && currentBallZ < 0) {
+                this.triggerPaddleHaptics(0.3, 50);
+                this.soundManager.playPaddleHit();
+            }
+
+            // AI paddle hit
             if (prevBallZ < -1.8 && currentBallZ >= -1.8) {
                 const ballSpeed = this.ball.ballVelocity.length();
                 const normalizedSpeed = Math.min(ballSpeed / this.ball.maxSpeed, 1.0);
-                // First pulse
                 this.triggerPaddleHaptics(normalizedSpeed * 0.4, 20);
-                // Second pulse after a tiny delay
-                setTimeout(() => {
-                    this.triggerPaddleHaptics(normalizedSpeed * 0.3, 20);
-                }, 40);
+                this.soundManager.playAIHit();
             }
 
-            // AI paddle side hit
-            if (Math.abs(this.ball.getBall().position.x - prevBallX) > 0.01 &&
-                currentBallZ < -1.8 && currentBallZ > -2.0) {
-                this.triggerPaddleHaptics(0.15, 40); // Very light haptics for AI side hits
+            // Wall bounce
+            if (Math.abs(currentBallX - prevBallX) > 0.01 &&
+                (Math.abs(currentBallX) > 0.65 || Math.abs(prevBallX) > 0.65)) {
+                this.soundManager.playWallBounce();
+            }
+
+            // Scoring
+            if ((currentBallZ > 0 && prevBallZ <= 0) || 
+                (currentBallZ < -2.0 && prevBallZ >= -2.0)) {
+                this.soundManager.playScore();
             }
 
             this.renderer.render(this.scene, this.camera);
