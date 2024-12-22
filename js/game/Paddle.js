@@ -16,19 +16,47 @@ export class Paddle {
     }
 
     createPaddle() {
-        const paddleGeometry = new THREE.BoxGeometry(this.width, this.height, this.depth);
+        const paddleGeometry = new THREE.BoxGeometry(0.3, 0.2, this.depth);
         const paddleMaterial = new THREE.MeshStandardMaterial({
-            color: this.isAI ? 0xff0000 : 0x00ff00,
-            emissive: this.isAI ? 0xff0000 : 0x00ff00,
-            emissiveIntensity: 0.5
+            color: 0x0088ff,
+            emissive: 0x0088ff,
+            emissiveIntensity: 0.5,
+            metalness: 0.9,
+            roughness: 0.2,
+            transparent: true,
+            opacity: 0.8
         });
         this.paddle = new THREE.Mesh(paddleGeometry, paddleMaterial);
+        this.paddle.position.set(0, 0.9, this.isAI ? -1.9 : -0.1);
+
+        // Add glow effect
+        const glowGeometry = new THREE.BoxGeometry(0.31, 0.21, this.depth + 0.01);
+        const glowMaterial = new THREE.MeshBasicMaterial({
+            color: 0x0088ff,
+            transparent: true,
+            opacity: 0.3
+        });
+        const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+        this.paddle.add(glow);
+
+        // Add energy field effect
+        const fieldGeometry = new THREE.BoxGeometry(0.32, 0.22, 0.001);
+        const fieldMaterial = new THREE.MeshBasicMaterial({
+            color: 0x0088ff,
+            transparent: true,
+            opacity: 0.2,
+            side: THREE.DoubleSide
+        });
         
-        // Position paddle based on whether it's AI or player
-        const zPosition = this.isAI ? -1.9 : -0.1; // AI paddle at far end
-        this.paddle.position.set(0, 0.9, zPosition);
-        this.targetPosition.copy(this.paddle.position);
-        
+        // Add energy field to front and back
+        const frontField = new THREE.Mesh(fieldGeometry, fieldMaterial);
+        frontField.position.z = this.depth / 2 + 0.001;
+        this.paddle.add(frontField);
+
+        const backField = new THREE.Mesh(fieldGeometry, fieldMaterial);
+        backField.position.z = -(this.depth / 2 + 0.001);
+        this.paddle.add(backField);
+
         this.scene.add(this.paddle);
     }
 

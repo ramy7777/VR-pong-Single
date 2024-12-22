@@ -12,15 +12,29 @@ export class Ball {
     }
 
     createBall() {
-        const ballGeometry = new THREE.SphereGeometry(0.02);
+        const ballGeometry = new THREE.SphereGeometry(0.02, 32, 32);
         const ballMaterial = new THREE.MeshStandardMaterial({
-            color: 0xffff00,
-            emissive: 0xffff00,
-            emissiveIntensity: 0.5
+            color: 0x00ffff,
+            emissive: 0x00ffff,
+            emissiveIntensity: 0.8,
+            metalness: 1.0,
+            roughness: 0.2,
+            transparent: true,
+            opacity: 0.8
         });
         this.ball = new THREE.Mesh(ballGeometry, ballMaterial);
         this.resetPosition();
         this.scene.add(this.ball);
+
+        // Add glow effect
+        const glowGeometry = new THREE.SphereGeometry(0.025, 32, 32);
+        const glowMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            transparent: true,
+            opacity: 0.3
+        });
+        const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+        this.ball.add(glow);
     }
 
     resetPosition() {
