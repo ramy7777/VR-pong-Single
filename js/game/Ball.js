@@ -3,7 +3,7 @@ import * as THREE from 'three';
 export class Ball {
     constructor(scene) {
         this.scene = scene;
-        this.initialSpeed = 0.01;
+        this.initialSpeed = 0.005; // Reduced initial speed from 0.01 to 0.005
         this.speedIncrease = 1.1; // Speed multiplier
         this.maxSpeed = 0.03; // Maximum speed cap
         this.hits = 0; // Count paddle hits
