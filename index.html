@@ -1,8 +1,6 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VR Pong</title>
     <style>
         body { margin: 0; }
@@ -25,14 +23,19 @@
 <body>
     <button id="startVR">Enter VR</button>
     <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/",
-                "webxr": "https://unpkg.com/three@0.158.0/examples/jsm/webxr/VRButton.js"
-            }
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
         }
+    }
     </script>
-    <script type="module" src="game.js"></script>
+    <script type="module">
+        import { Game } from './js/game/Game.js';
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const game = new Game();
+        });
+    </script>
 </body>
 </html>
