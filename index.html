@@ -2,6 +2,8 @@
 <html>
 <head>
     <title>VR Pong</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A WebXR Pong game for Meta Quest">
     <style>
         body { margin: 0; }
         canvas { display: block; }
@@ -18,10 +20,28 @@
             cursor: pointer;
             font-size: 16px;
         }
+        #noVR {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
     <button id="startVR">Enter VR</button>
+    <div id="noVR">
+        <h2>WebXR Not Available</h2>
+        <p>This game requires a WebXR-compatible device and browser.</p>
+        <p>Please use a Meta Quest or other VR headset.</p>
+    </div>
+
     <script type="importmap">
     {
         "imports": {
@@ -34,6 +54,19 @@
         import { Game } from './js/game/Game.js';
         
         document.addEventListener('DOMContentLoaded', () => {
+            // Check if WebXR is available
+            if ('xr' in navigator) {
+                navigator.xr.isSessionSupported('immersive-vr').then(supported => {
+                    if (!supported) {
+                        document.getElementById('startVR').style.display = 'none';
+                        document.getElementById('noVR').style.display = 'block';
+                    }
+                });
+            } else {
+                document.getElementById('startVR').style.display = 'none';
+                document.getElementById('noVR').style.display = 'block';
+            }
+
             const game = new Game();
         });
     </script>
