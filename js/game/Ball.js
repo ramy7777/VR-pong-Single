@@ -47,6 +47,28 @@ export class Ball {
         }
     }
 
+    calculateReflectionAngle(hitPosition, paddlePosition) {
+        // Calculate where on the paddle the ball hit (-0.15 to 0.15, since paddle width is 0.3)
+        const hitOffset = this.ball.position.x - paddlePosition.x;
+        
+        // Normalize the offset to be between -1 and 1
+        const normalizedOffset = hitOffset / 0.15;
+        
+        // Calculate the reflection angle (up to 45 degrees)
+        const maxAngle = Math.PI / 4; // 45 degrees
+        const angle = normalizedOffset * maxAngle;
+        
+        // Get current ball speed
+        const speed = this.ballVelocity.length();
+        
+        // Calculate new velocity components
+        const zDirection = this.ballVelocity.z > 0 ? -1 : 1;
+        const xComponent = Math.sin(angle) * speed;
+        const zComponent = Math.cos(angle) * speed * zDirection;
+        
+        return new THREE.Vector3(xComponent, 0, zComponent);
+    }
+
     update(delta, playerPaddle, aiPaddle) {
         // Update ball position
         this.ball.position.add(this.ballVelocity);
@@ -59,9 +81,12 @@ export class Ball {
         // Ball-player paddle collision
         if (this.ball.position.z > -0.2 && this.ball.position.z < 0) {
             if (Math.abs(this.ball.position.x - playerPaddle.position.x) < 0.2) {
-                this.ballVelocity.z *= -1;
-                // Add some random x velocity for variety (reduced)
-                this.ballVelocity.x += (Math.random() - 0.5) * 0.005;
+                // Calculate new velocity based on hit position
+                this.ballVelocity.copy(this.calculateReflectionAngle(
+                    this.ball.position,
+                    playerPaddle.position
+                ));
+                
                 this.hits++;
                 if (this.hits % 2 === 0) { // Increase speed every other hit
                     this.increaseSpeed();
