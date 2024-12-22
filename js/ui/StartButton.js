@@ -100,4 +100,13 @@ export class StartButton {
         this.button.position.z = -1.0;
         this.unhighlight();
     }
+
+    hide() {
+        this.button.visible = false;
+    }
+
+    show() {
+        this.button.visible = true;
+        this.reset();
+    }
 }

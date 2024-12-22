@@ -144,6 +144,7 @@ export class Ball {
 
         if (this.ball.position.z > 0 || this.ball.position.z < -2.0) {
             this.reset();
+            return 'score'; // Return score event when ball is out
         }
 
         return false;
