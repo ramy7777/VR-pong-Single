@@ -75,16 +75,67 @@ export class GameEnvironment {
         this.table.position.z = -1.0;
         this.scene.add(this.table);
 
-        // Add table edge glow
-        const edgeGeometry = new THREE.BoxGeometry(1.52, 0.03, 2.02);
-        const edgeMaterial = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
+        // Create side rails
+        const railMaterial = new THREE.MeshStandardMaterial({
+            color: 0x0088ff,
+            metalness: 0.9,
+            roughness: 0.1,
+            emissive: 0x0088ff,
+            emissiveIntensity: 0.5,
+            transparent: true,
+            opacity: 0.8
+        });
+
+        // Left rail
+        const leftRail = new THREE.Mesh(
+            new THREE.BoxGeometry(0.05, 0.05, 2),
+            railMaterial
+        );
+        leftRail.position.set(-0.775, 0.825, -1.0);
+        this.scene.add(leftRail);
+
+        // Right rail
+        const rightRail = new THREE.Mesh(
+            new THREE.BoxGeometry(0.05, 0.05, 2),
+            railMaterial
+        );
+        rightRail.position.set(0.775, 0.825, -1.0);
+        this.scene.add(rightRail);
+
+        // Add glow effect to rails
+        const glowMaterial = new THREE.MeshBasicMaterial({
+            color: 0x0088ff,
             transparent: true,
             opacity: 0.3
         });
-        const tableEdge = new THREE.Mesh(edgeGeometry, edgeMaterial);
-        tableEdge.position.copy(this.table.position);
-        this.scene.add(tableEdge);
+
+        // Left rail glow
+        const leftGlow = new THREE.Mesh(
+            new THREE.BoxGeometry(0.07, 0.07, 2.02),
+            glowMaterial
+        );
+        leftGlow.position.copy(leftRail.position);
+        this.scene.add(leftGlow);
+
+        // Right rail glow
+        const rightGlow = new THREE.Mesh(
+            new THREE.BoxGeometry(0.07, 0.07, 2.02),
+            glowMaterial
+        );
+        rightGlow.position.copy(rightRail.position);
+        this.scene.add(rightGlow);
+
+        // Add energy field between rails
+        const fieldGeometry = new THREE.BoxGeometry(1.5, 0.05, 2);
+        const fieldMaterial = new THREE.MeshBasicMaterial({
+            color: 0x0088ff,
+            transparent: true,
+            opacity: 0.1,
+            side: THREE.DoubleSide
+        });
+        const energyField = new THREE.Mesh(fieldGeometry, fieldMaterial);
+        energyField.position.set(0, 0.825, -1.0);
+        this.scene.add(energyField);
     }
 
     createGridFloor() {
