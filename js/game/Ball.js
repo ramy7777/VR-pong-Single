@@ -61,42 +61,34 @@ export class Ball {
         const paddleDepth = 0.1;
         const ballRadius = 0.02;
 
-        // Check if ball is at paddle's height (y-axis)
         if (Math.abs(this.ball.position.y - paddlePosition.y) > paddleDepth) {
             return false;
         }
 
-        // Calculate distances
         const dx = Math.abs(this.ball.position.x - paddlePosition.x);
         const dz = Math.abs(this.ball.position.z - paddlePosition.z);
         
-        // Check if we're within paddle bounds
         if (dx > (paddleWidth/2 + ballRadius) || dz > (paddleDepth/2 + ballRadius)) {
             return false;
         }
 
-        // Determine if it's a side hit or front/back hit
         const isSideHit = dx > paddleWidth/2;
         
         if (isSideHit) {
-            // For side hits, just slightly adjust the x velocity
             this.ballVelocity.x *= -0.8;
-            return false; // Don't count as a paddle hit
+            return false;
         }
 
-        return true; // Front/back hit
+        return true;
     }
 
     update(delta, playerPaddle, aiPaddle) {
-        // Update ball position
         this.ball.position.add(this.ballVelocity);
 
-        // Ball-table collision
         if (this.ball.position.x > 0.7 || this.ball.position.x < -0.7) {
             this.ballVelocity.x *= -1;
         }
 
-        // Ball-player paddle collision
         if (this.ball.position.z > -0.2 && this.ball.position.z < 0) {
             if (this.checkPaddleCollision(playerPaddle.position, true)) {
                 this.ballVelocity.copy(this.calculateReflectionAngle(
@@ -111,7 +103,6 @@ export class Ball {
             }
         }
 
-        // Ball-AI paddle collision
         if (this.ball.position.z < -1.8 && this.ball.position.z > -2.0) {
             if (this.checkPaddleCollision(aiPaddle.position, false)) {
                 this.ballVelocity.z *= -1;
@@ -124,12 +115,10 @@ export class Ball {
             }
         }
 
-        // Reset ball if it goes past either paddle
         if (this.ball.position.z > 0 || this.ball.position.z < -2.0) {
             this.resetPosition();
         }
 
-        // Keep ball at constant height
         this.ball.position.y = 0.9;
     }
 }
