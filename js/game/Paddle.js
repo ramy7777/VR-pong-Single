@@ -4,11 +4,11 @@ export class Paddle {
     constructor(scene, isAI = false) {
         this.scene = scene;
         this.isAI = isAI;
-        this.reactionDelay = 0;
-        this.lastTargetX = 0;
         this.targetPosition = new THREE.Vector3();
-        this.smoothSpeed = 0.15; // Reduced for smoother movement
-        this.lastPredictedX = 0; // Store last prediction
+        this.smoothSpeed = 0.15; // Increased for faster response
+        this.lastPredictedX = 0;
+        this.lastUpdateTime = 0;
+        this.updateInterval = 50; // Update more frequently
         this.createPaddle();
     }
 
@@ -41,47 +41,59 @@ export class Paddle {
         this.paddle.position.copy(position);
     }
 
-    updateAI(ball, difficulty = 0.1) {
+    lerp(start, end, t) {
+        return start * (1 - t) + end * t;
+    }
+
+    updateAI(ball, difficulty = 0.15) { // Increased base difficulty
         if (!this.isAI) return;
 
-        // Get the ball's position
+        const currentTime = performance.now();
         const targetX = ball.position.x;
-        
-        // Only update prediction occasionally to reduce jitter
-        if (Math.abs(this.lastTargetX - targetX) > 0.1) {
-            this.lastPredictedX = targetX + (Math.random() - 0.5) * 0.05; // Smaller random offset
-            this.lastTargetX = targetX;
+
+        // Update prediction less frequently
+        if (currentTime - this.lastUpdateTime > this.updateInterval) {
+            // Calculate base target position
+            let newTargetX = targetX;
+
+            // Add very small random offset for natural movement
+            const randomOffset = (Math.random() - 0.5) * 0.01; // Reduced randomness
+            newTargetX += randomOffset;
+
+            // Smooth transition to new target
+            this.lastPredictedX = this.lerp(
+                this.lastPredictedX,
+                newTargetX,
+                0.5 // Faster target updating
+            );
+
+            this.lastUpdateTime = currentTime;
         }
 
-        // Calculate the difference using smoothed prediction
-        const diff = this.lastPredictedX - this.paddle.position.x;
+        // Calculate smooth movement
+        const currentX = this.paddle.position.x;
+        const diff = this.lastPredictedX - currentX;
         
-        // Calculate movement speed based on distance
-        let speed = difficulty;
-        
-        // Gradual speed adjustment based on distance
-        if (Math.abs(diff) < 0.1) {
-            speed *= Math.abs(diff) * 5; // Proportional speed
+        // Use quadratic easing for smoother acceleration/deceleration
+        const direction = Math.sign(diff);
+        const distance = Math.abs(diff);
+        let speed = Math.min(distance * distance * 4, difficulty); // Increased acceleration
+
+        // Move towards target
+        if (Math.abs(diff) > 0.001) {
+            const movement = direction * speed;
+            const newX = this.lerp(
+                currentX,
+                currentX + movement,
+                this.smoothSpeed
+            );
+
+            // Apply position with constraints
+            this.paddle.position.x = THREE.MathUtils.clamp(
+                newX,
+                -0.6,
+                0.6
+            );
         }
-
-        // Calculate target position
-        const movement = Math.sign(diff) * Math.min(Math.abs(diff), speed);
-        
-        this.targetPosition.x = THREE.MathUtils.clamp(
-            this.paddle.position.x + movement,
-            -0.6,
-            0.6
-        );
-
-        // Smoothly interpolate to target position
-        this.paddle.position.x += (this.targetPosition.x - this.paddle.position.x) * this.smoothSpeed;
-
-        // Constrain paddle movement
-        const tableHalfWidth = 0.75;
-        this.paddle.position.x = THREE.MathUtils.clamp(
-            this.paddle.position.x,
-            -tableHalfWidth + 0.15,
-            tableHalfWidth - 0.15
-        );
     }
 }
