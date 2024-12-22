@@ -8,10 +8,10 @@ export class Paddle {
         this.height = 0.1;     // Keep height the same for visibility
         this.depth = 0.02;     // Make it much thinner (was 0.1)
         this.targetPosition = new THREE.Vector3();
-        this.smoothSpeed = 0.18; // Increased from 0.15 for faster movement
+        this.smoothSpeed = 0.35; // Increased from 0.25 for even faster AI movement
         this.lastPredictedX = 0;
         this.lastUpdateTime = 0;
-        this.updateInterval = 50; // Update more frequently
+        this.updateInterval = 30; // Update even more frequently (was 40)
         this.createPaddle();
     }
 
