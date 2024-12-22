@@ -3,8 +3,12 @@ import * as THREE from 'three';
 export class Ball {
     constructor(scene) {
         this.scene = scene;
+        this.initialSpeed = 0.01;
+        this.speedIncrease = 1.1; // Speed multiplier
+        this.maxSpeed = 0.03; // Maximum speed cap
+        this.hits = 0; // Count paddle hits
         // Ball physics - slower initial speed
-        this.ballVelocity = new THREE.Vector3(0.01, 0, 0.01);
+        this.ballVelocity = new THREE.Vector3(this.initialSpeed, 0, this.initialSpeed);
         this.createBall();
     }
 
@@ -22,11 +26,25 @@ export class Ball {
 
     resetPosition() {
         this.ball.position.set(0, 0.9, -1.0); // Start ball at center of table
-        this.ballVelocity.set(0.01, 0, 0.01); // Reset with initial speed
+        this.hits = 0;
+        // Reset with initial speed in a random x direction
+        const randomDir = Math.random() > 0.5 ? 1 : -1;
+        this.ballVelocity.set(this.initialSpeed * randomDir, 0, this.initialSpeed);
     }
 
     getBall() {
         return this.ball;
+    }
+
+    increaseSpeed() {
+        const currentSpeed = this.ballVelocity.length();
+        if (currentSpeed < this.maxSpeed) {
+            this.ballVelocity.multiplyScalar(this.speedIncrease);
+            // Cap the speed at maxSpeed
+            if (this.ballVelocity.length() > this.maxSpeed) {
+                this.ballVelocity.normalize().multiplyScalar(this.maxSpeed);
+            }
+        }
     }
 
     update(delta, playerPaddle, aiPaddle) {
@@ -44,6 +62,10 @@ export class Ball {
                 this.ballVelocity.z *= -1;
                 // Add some random x velocity for variety (reduced)
                 this.ballVelocity.x += (Math.random() - 0.5) * 0.005;
+                this.hits++;
+                if (this.hits % 2 === 0) { // Increase speed every other hit
+                    this.increaseSpeed();
+                }
             }
         }
 
@@ -53,6 +75,10 @@ export class Ball {
                 this.ballVelocity.z *= -1;
                 // Add some random x velocity for variety (reduced)
                 this.ballVelocity.x += (Math.random() - 0.5) * 0.005;
+                this.hits++;
+                if (this.hits % 2 === 0) { // Increase speed every other hit
+                    this.increaseSpeed();
+                }
             }
         }
 

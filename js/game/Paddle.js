@@ -4,6 +4,11 @@ export class Paddle {
     constructor(scene, isAI = false) {
         this.scene = scene;
         this.isAI = isAI;
+        this.reactionDelay = 0;
+        this.lastTargetX = 0;
+        this.targetPosition = new THREE.Vector3();
+        this.smoothSpeed = 0.15; // Reduced for smoother movement
+        this.lastPredictedX = 0; // Store last prediction
         this.createPaddle();
     }
 
@@ -19,6 +24,7 @@ export class Paddle {
         // Position paddle based on whether it's AI or player
         const zPosition = this.isAI ? -1.9 : -0.1; // AI paddle at far end
         this.paddle.position.set(0, 0.9, zPosition);
+        this.targetPosition.copy(this.paddle.position);
         
         this.scene.add(this.paddle);
     }
@@ -35,18 +41,40 @@ export class Paddle {
         this.paddle.position.copy(position);
     }
 
-    updateAI(ball, difficulty = 0.02) {
+    updateAI(ball, difficulty = 0.1) {
         if (!this.isAI) return;
 
         // Get the ball's position
         const targetX = ball.position.x;
-        const currentX = this.paddle.position.x;
+        
+        // Only update prediction occasionally to reduce jitter
+        if (Math.abs(this.lastTargetX - targetX) > 0.1) {
+            this.lastPredictedX = targetX + (Math.random() - 0.5) * 0.05; // Smaller random offset
+            this.lastTargetX = targetX;
+        }
 
-        // Calculate the difference
-        const diff = targetX - currentX;
+        // Calculate the difference using smoothed prediction
+        const diff = this.lastPredictedX - this.paddle.position.x;
+        
+        // Calculate movement speed based on distance
+        let speed = difficulty;
+        
+        // Gradual speed adjustment based on distance
+        if (Math.abs(diff) < 0.1) {
+            speed *= Math.abs(diff) * 5; // Proportional speed
+        }
 
-        // Move towards the ball with some delay (for difficulty)
-        this.paddle.position.x += Math.sign(diff) * Math.min(Math.abs(diff), difficulty);
+        // Calculate target position
+        const movement = Math.sign(diff) * Math.min(Math.abs(diff), speed);
+        
+        this.targetPosition.x = THREE.MathUtils.clamp(
+            this.paddle.position.x + movement,
+            -0.6,
+            0.6
+        );
+
+        // Smoothly interpolate to target position
+        this.paddle.position.x += (this.targetPosition.x - this.paddle.position.x) * this.smoothSpeed;
 
         // Constrain paddle movement
         const tableHalfWidth = 0.75;
