@@ -88,7 +88,7 @@ export class GameEnvironment {
 
         // Left rail
         const leftRail = new THREE.Mesh(
-            new THREE.BoxGeometry(0.05, 0.05, 2),
+            new THREE.BoxGeometry(0.05, 0.15, 2),
             railMaterial
         );
         leftRail.position.set(-0.775, 0.825, -1.0);
@@ -96,7 +96,7 @@ export class GameEnvironment {
 
         // Right rail
         const rightRail = new THREE.Mesh(
-            new THREE.BoxGeometry(0.05, 0.05, 2),
+            new THREE.BoxGeometry(0.05, 0.15, 2),
             railMaterial
         );
         rightRail.position.set(0.775, 0.825, -1.0);
