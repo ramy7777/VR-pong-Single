@@ -7,8 +7,10 @@ export class Ball {
         this.speedIncrease = 1.1;
         this.maxSpeed = 0.03;
         this.hits = 0;
-        this.ballVelocity = new THREE.Vector3(this.initialSpeed, 0, this.initialSpeed);
+        this.ballVelocity = new THREE.Vector3(0, 0, 0);
+        this.speed = 1.5;
         this.createBall();
+        this.reset();
     }
 
     createBall() {
@@ -24,7 +26,6 @@ export class Ball {
             opacity: 0.8
         });
         this.ball = new THREE.Mesh(ballGeometry, ballMaterial);
-        this.resetPosition();
         this.scene.add(this.ball);
 
         // Create point light for ball reflection
@@ -34,11 +35,17 @@ export class Ball {
         this.scene.add(this.ballLight);
     }
 
-    resetPosition() {
+    reset() {
         this.ball.position.set(0, 0.9, -1.0);
+        this.ballVelocity.set(0, 0, 0);
         this.hits = 0;
-        const randomDir = Math.random() > 0.5 ? 1 : -1;
-        this.ballVelocity.set(this.initialSpeed * randomDir, 0, this.initialSpeed);
+    }
+
+    start() {
+        // Random initial direction
+        const angle = (Math.random() * Math.PI / 2) - Math.PI / 4; // -45 to 45 degrees
+        this.ballVelocity.x = Math.sin(angle) * this.initialSpeed;
+        this.ballVelocity.z = Math.cos(angle) * this.initialSpeed;
     }
 
     getBall() {
@@ -136,7 +143,7 @@ export class Ball {
         }
 
         if (this.ball.position.z > 0 || this.ball.position.z < -2.0) {
-            this.resetPosition();
+            this.reset();
         }
 
         return false;

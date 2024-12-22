@@ -30,10 +30,22 @@ export class VRController {
     setupControllers() {
         // Left Controller (0)
         this.controllers[0] = this.renderer.xr.getController(0);
+        this.controllers[0].addEventListener('selectstart', () => {
+            this.controllers[0].userData.isSelecting = true;
+        });
+        this.controllers[0].addEventListener('selectend', () => {
+            this.controllers[0].userData.isSelecting = false;
+        });
         this.playerGroup.add(this.controllers[0]);
 
         // Right Controller (1)
         this.controllers[1] = this.renderer.xr.getController(1);
+        this.controllers[1].addEventListener('selectstart', () => {
+            this.controllers[1].userData.isSelecting = true;
+        });
+        this.controllers[1].addEventListener('selectend', () => {
+            this.controllers[1].userData.isSelecting = false;
+        });
         this.playerGroup.add(this.controllers[1]);
 
         // Add controller models
