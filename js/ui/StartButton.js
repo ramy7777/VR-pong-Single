@@ -36,23 +36,34 @@ export class StartButton {
         const context = canvas.getContext('2d');
         canvas.width = 256;
         canvas.height = 128;
-        context.fillStyle = '#000000';
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        context.font = 'bold 64px Arial';
+        
+        // Clear canvas to be transparent
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Add text with smaller font
+        context.font = 'bold 43px Arial'; // Reduced from 72px
         context.textAlign = 'center';
         context.textBaseline = 'middle';
-        context.fillStyle = '#ffffff'; // White text
+        context.fillStyle = '#ffffff';
+        context.strokeStyle = '#000000';
+        context.lineWidth = 3; // Reduced stroke width for smaller text
+        
+        // Add stroke for better visibility
+        context.strokeText('START', canvas.width / 2, canvas.height / 2);
         context.fillText('START', canvas.width / 2, canvas.height / 2);
 
         const textTexture = new THREE.CanvasTexture(canvas);
         const textMaterial = new THREE.MeshBasicMaterial({
             map: textTexture,
-            transparent: true
+            transparent: true,
+            opacity: 1.0,
+            side: THREE.DoubleSide
         });
-        const textGeometry = new THREE.PlaneGeometry(0.25, 0.08);
-        this.text = new THREE.Mesh(textGeometry, textMaterial);
-        this.text.position.z = 0.026;
-        this.button.add(this.text);
+        
+        const textGeometry = new THREE.PlaneGeometry(0.24, 0.12); // Reduced from 0.4, 0.2
+        this.textMesh = new THREE.Mesh(textGeometry, textMaterial);
+        this.textMesh.position.z = 0.04; // Adjusted z position
+        this.button.add(this.textMesh);
 
         this.scene.add(this.button);
     }
