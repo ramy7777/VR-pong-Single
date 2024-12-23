@@ -200,10 +200,12 @@ export class Game {
                         // AI scores
                         this.aiScore++;
                         this.aiScoreDisplay.updateScore(this.aiScore);
+                        this.environment.flashRail('left');  // Flash left rail
                     } else {
                         // Player scores
                         this.playerScore++;
                         this.playerScoreDisplay.updateScore(this.playerScore);
+                        this.environment.flashRail('right');  // Flash right rail
                     }
                     
                     this.soundManager.playLose();

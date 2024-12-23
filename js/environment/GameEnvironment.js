@@ -3,6 +3,10 @@ import * as THREE from 'three';
 export class GameEnvironment {
     constructor(scene) {
         this.scene = scene;
+        this.leftRail = null;
+        this.rightRail = null;
+        this.originalRailMaterial = null;
+        this.redRailMaterial = null;
         this.createLighting();
         this.createWalls();
         this.createTable();
@@ -76,7 +80,7 @@ export class GameEnvironment {
         this.scene.add(this.table);
 
         // Create side rails
-        const railMaterial = new THREE.MeshStandardMaterial({
+        this.originalRailMaterial = new THREE.MeshStandardMaterial({
             color: 0x0088ff,
             metalness: 0.9,
             roughness: 0.1,
@@ -86,21 +90,31 @@ export class GameEnvironment {
             opacity: 0.8
         });
 
+        this.redRailMaterial = new THREE.MeshStandardMaterial({
+            color: 0xff0000,
+            metalness: 0.9,
+            roughness: 0.1,
+            emissive: 0xff0000,
+            emissiveIntensity: 0.5,
+            transparent: true,
+            opacity: 0.8
+        });
+
         // Left rail
-        const leftRail = new THREE.Mesh(
+        this.leftRail = new THREE.Mesh(
             new THREE.BoxGeometry(0.05, 0.15, 2),
-            railMaterial
+            this.originalRailMaterial
         );
-        leftRail.position.set(-0.775, 0.825, -1.0);
-        this.scene.add(leftRail);
+        this.leftRail.position.set(-0.775, 0.825, -1.0);
+        this.scene.add(this.leftRail);
 
         // Right rail
-        const rightRail = new THREE.Mesh(
+        this.rightRail = new THREE.Mesh(
             new THREE.BoxGeometry(0.05, 0.15, 2),
-            railMaterial
+            this.originalRailMaterial
         );
-        rightRail.position.set(0.775, 0.825, -1.0);
-        this.scene.add(rightRail);
+        this.rightRail.position.set(0.775, 0.825, -1.0);
+        this.scene.add(this.rightRail);
 
         // Add glow effect to rails
         const glowMaterial = new THREE.MeshBasicMaterial({
@@ -114,7 +128,7 @@ export class GameEnvironment {
             new THREE.BoxGeometry(0.07, 0.07, 2.02),
             glowMaterial
         );
-        leftGlow.position.copy(leftRail.position);
+        leftGlow.position.copy(this.leftRail.position);
         this.scene.add(leftGlow);
 
         // Right rail glow
@@ -122,7 +136,7 @@ export class GameEnvironment {
             new THREE.BoxGeometry(0.07, 0.07, 2.02),
             glowMaterial
         );
-        rightGlow.position.copy(rightRail.position);
+        rightGlow.position.copy(this.rightRail.position);
         this.scene.add(rightGlow);
 
         // Add energy field between rails
@@ -164,6 +178,18 @@ export class GameEnvironment {
 
         // Set background color
         this.scene.background = new THREE.Color(0x000033);
+    }
+
+    flashRail(side) {
+        // Flash both rails red
+        this.leftRail.material = this.redRailMaterial;
+        this.rightRail.material = this.redRailMaterial;
+        
+        // Reset both rails after 1 second
+        setTimeout(() => {
+            this.leftRail.material = this.originalRailMaterial;
+            this.rightRail.material = this.originalRailMaterial;
+        }, 1000);
     }
 
     getTable() {
