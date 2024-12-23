@@ -87,14 +87,14 @@ export class Game {
         // Initialize score displays
         this.playerScoreDisplay = new ScoreDisplay(
             this.scene,
-            new THREE.Vector3(-1.90, 1.5, -1),  // Moved further in front of left wall
-            new THREE.Euler(0, Math.PI / 2, 0)
+            new THREE.Vector3(1.90, 1.5, -1),  // Player score on right wall
+            new THREE.Euler(0, -Math.PI / 2, 0)
         );
         
         this.aiScoreDisplay = new ScoreDisplay(
             this.scene,
-            new THREE.Vector3(1.90, 1.5, -1),   // Moved further in front of right wall
-            new THREE.Euler(0, -Math.PI / 2, 0)
+            new THREE.Vector3(-1.90, 1.5, -1),  // AI score on left wall
+            new THREE.Euler(0, Math.PI / 2, 0)
         );
     }
 
@@ -194,19 +194,11 @@ export class Game {
                             }
                         });
                     }
-                } else if (collision === 'score') {
-                    // Check which side scored based on ball position
-                    if (this.ball.getBall().position.z > 0) {
-                        // AI scores
-                        this.aiScore++;
-                        this.aiScoreDisplay.updateScore(this.aiScore);
-                        this.environment.flashRail('left');  // Flash left rail
-                    } else {
-                        // Player scores
-                        this.playerScore++;
-                        this.playerScoreDisplay.updateScore(this.playerScore);
-                        this.environment.flashRail('right');  // Flash right rail
-                    }
+                } else if (collision === 'player_score') {
+                    // Player scores (ball went past AI's bounds)
+                    this.playerScore++;
+                    this.playerScoreDisplay.updateScore(this.playerScore);
+                    this.environment.flashRail('right');  // Flash right rail
                     
                     this.soundManager.playLose();
                     const session = this.renderer.xr.getSession();
@@ -217,13 +209,33 @@ export class Game {
                             }
                         });
                     }
-                    // Instead of ending the game, just reset and start the ball
-                    this.ball.reset();
+                    // Reset and start the ball after a delay
                     setTimeout(() => {
-                        if (this.isGameStarted) {  // Only start if game is still running
+                        if (this.isGameStarted) {
                             this.ball.start();
                         }
-                    }, 1000);  // Wait 1 second before respawning ball
+                    }, 1000);
+                } else if (collision === 'ai_score') {
+                    // AI scores (ball went past player's bounds)
+                    this.aiScore++;
+                    this.aiScoreDisplay.updateScore(this.aiScore);
+                    this.environment.flashRail('left');  // Flash left rail
+                    
+                    this.soundManager.playLose();
+                    const session = this.renderer.xr.getSession();
+                    if (session) {
+                        session.inputSources.forEach(inputSource => {
+                            if (inputSource.handedness === 'right' && inputSource.gamepad?.hapticActuators?.[0]) {
+                                inputSource.gamepad.hapticActuators[0].pulse(0.7, 100);
+                            }
+                        });
+                    }
+                    // Reset and start the ball after a delay
+                    setTimeout(() => {
+                        if (this.isGameStarted) {
+                            this.ball.start();
+                        }
+                    }, 1000);
                 }
 
                 const currentBallX = this.ball.getBall().position.x;

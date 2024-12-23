@@ -143,8 +143,9 @@ export class Ball {
         }
 
         if (this.ball.position.z > 0 || this.ball.position.z < -2.0) {
+            const scoreType = this.ball.position.z > 0 ? 'player_score' : 'ai_score';
             this.reset();
-            return 'score'; // Return score event when ball is out
+            return scoreType;
         }
 
         return false;
