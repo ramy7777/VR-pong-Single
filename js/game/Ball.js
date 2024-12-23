@@ -78,21 +78,40 @@ export class Ball {
         const paddleBox = new THREE.Box3().setFromObject(paddle);
         const ballBox = new THREE.Box3().setFromObject(this.ball);
         
-        // Expand the paddle's collision box slightly for better gameplay
-        paddleBox.min.z -= 0.01;  
-        paddleBox.max.z += 0.01;  
+        // Create a slightly larger box for edge detection
+        const edgeBox = paddleBox.clone();
+        edgeBox.expandByScalar(0.02);  // Add a small buffer zone around the paddle
         
-        if (ballBox.intersectsBox(paddleBox)) {
-            const isSideHit = Math.abs(this.ball.position.x - paddle.position.x) > paddle.scale.x / 2;
+        if (ballBox.intersectsBox(edgeBox)) {
+            // Calculate where on the paddle the ball hit
+            const hitPoint = this.ball.position.clone();
+            const paddleCenter = paddle.position.clone();
             
-            if (isSideHit) {
-                this.ballVelocity.x *= -0.8;
-                return false;
+            // Calculate the hit position relative to the paddle center
+            const relativeX = hitPoint.x - paddleCenter.x;
+            const relativeZ = hitPoint.z - paddleCenter.z;
+            
+            // Determine if it's an edge hit
+            const isEdgeHit = Math.abs(relativeX) > (paddle.scale.x * 0.4);
+            
+            if (isEdgeHit) {
+                // Edge hit - reflect with a steeper angle and slight speed reduction
+                const normalizedHitPoint = relativeX / (paddle.scale.x * 0.5);
+                const deflectionAngle = normalizedHitPoint * (Math.PI / 3); // Up to 60 degrees
+                
+                // Maintain some of the original velocity but add strong sideways component
+                const speed = this.ballVelocity.length() * 0.9; // Slight speed reduction
+                const zDirection = this.ballVelocity.z > 0 ? -1 : 1;
+                
+                this.ballVelocity.x = Math.sin(deflectionAngle) * speed;
+                this.ballVelocity.z = Math.cos(deflectionAngle) * speed * zDirection;
+                
+                return 'edge';
             }
-
-            return true;
+            
+            return 'center';
         }
-
+        
         return false;
     }
 
@@ -104,7 +123,7 @@ export class Ball {
         
         // Update light position to follow ball
         this.ballLight.position.copy(this.ball.position);
-        this.ballLight.position.y -= 0.1; // Keep light slightly below ball
+        this.ballLight.position.y -= 0.1;
 
         // Side wall collision
         if (this.ball.position.x > 0.7 || this.ball.position.x < -0.7) {
@@ -114,11 +133,15 @@ export class Ball {
 
         // Player paddle collision
         if (this.ball.position.z > -0.2 && this.ball.position.z < 0) {
-            if (this.checkPaddleCollision(playerPaddle)) {
-                this.ballVelocity.copy(this.calculateReflectionAngle(
-                    this.ball.position,
-                    playerPaddle.position
-                ));
+            const collisionType = this.checkPaddleCollision(playerPaddle);
+            if (collisionType) {
+                if (collisionType === 'center') {
+                    this.ballVelocity.copy(this.calculateReflectionAngle(
+                        this.ball.position,
+                        playerPaddle.position
+                    ));
+                }
+                // Edge hits are handled in checkPaddleCollision
                 
                 this.hits++;
                 if (this.hits % 2 === 0) {
@@ -130,9 +153,13 @@ export class Ball {
 
         // AI paddle collision
         if (this.ball.position.z < -1.8 && this.ball.position.z > -2.0) {
-            if (this.checkPaddleCollision(aiPaddle)) {
-                this.ballVelocity.z *= -1;
-                this.ballVelocity.x += (Math.random() - 0.5) * 0.005;
+            const collisionType = this.checkPaddleCollision(aiPaddle);
+            if (collisionType) {
+                if (collisionType === 'center') {
+                    this.ballVelocity.z *= -1;
+                    this.ballVelocity.x += (Math.random() - 0.5) * 0.005;
+                }
+                // Edge hits are handled in checkPaddleCollision
                 
                 this.hits++;
                 if (this.hits % 2 === 0) {
