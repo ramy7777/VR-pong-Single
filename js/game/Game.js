@@ -141,6 +141,8 @@ export class Game {
                         // Reset scores when game starts
                         this.playerScore = 0;
                         this.aiScore = 0;
+                        this.playerScoreDisplay.updateScore(0);
+                        this.aiScoreDisplay.updateScore(0);
                         
                         // Add strong haptic feedback when pressing start
                         const session = this.renderer.xr.getSession();
@@ -181,8 +183,9 @@ export class Game {
 
                 // Update timer
                 if (this.timer.update()) {
-                    // Timer finished
+                    // Timer has finished
                     this.isGameStarted = false;
+                    this.soundManager.stopBackgroundMusic();
                     this.startButton.show();
                     this.ball.reset();
                 }

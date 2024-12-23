@@ -236,8 +236,8 @@ export class SoundManager {
     createProgressiveMusic() {
         const bassline = [36, 36, 43, 41]; // C2, C2, G2, F2
         const melody = [60, 64, 67, 69];   // C4, E4, G4, A4
-        const baseNoteDuration = 0.2;
-        const baseNoteGap = 0.1;
+        const baseNoteDuration = 0.3;  // Increased from 0.2 to 0.3 for slower pace
+        const baseNoteGap = 0.15;      // Increased from 0.1 to 0.15 for slower pace
         let currentSpeed = 1.0;
         
         return {
