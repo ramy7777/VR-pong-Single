@@ -48,7 +48,7 @@ export class ScoreDisplay {
         // Set text properties for the label
         if (this.label) {
             this.context.fillStyle = '#ffffff';
-            this.context.font = 'bold 60px Arial';  // Smaller font for label
+            this.context.font = 'bold 72px Arial';  
             this.context.textAlign = 'center';
             this.context.textBaseline = 'middle';
             this.context.shadowColor = '#4444ff';
@@ -57,7 +57,7 @@ export class ScoreDisplay {
             // Draw the label above the score
             this.context.fillText(this.label, 
                 this.canvas.width / 2, 
-                this.canvas.height / 4  // Position label above score
+                this.canvas.height / 5  
             );
         }
         

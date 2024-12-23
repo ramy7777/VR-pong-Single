@@ -81,14 +81,14 @@ export class Game {
             this.scene,
             new THREE.Vector3(1.90, 1.5, -1),  // Player score on right wall
             new THREE.Euler(0, -Math.PI / 2, 0),
-            'YOU'
+            'PONG MASTER'
         );
         
         this.aiScoreDisplay = new ScoreDisplay(
             this.scene,
             new THREE.Vector3(-1.90, 1.5, -1),  // AI score on left wall
             new THREE.Euler(0, Math.PI / 2, 0),
-            'PONG MASTER'
+            'YOU'
         );
     }
 
