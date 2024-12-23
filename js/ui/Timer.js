@@ -24,7 +24,7 @@ export class Timer {
         });
 
         // Create plane geometry for the timer display
-        this.geometry = new THREE.PlaneGeometry(1, 0.3);
+        this.geometry = new THREE.PlaneGeometry(1, 1);  // Same size as score display
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         
         // Position the timer above the table
@@ -78,8 +78,8 @@ export class Timer {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
         // Set text properties
-        this.context.fillStyle = '#4444ff';
-        this.context.font = 'bold 200px Arial';
+        this.context.fillStyle = '#ffffff';
+        this.context.font = 'bold 200px Arial';  // Same font size as score display
         this.context.textAlign = 'center';
         this.context.textBaseline = 'middle';
         
@@ -88,15 +88,6 @@ export class Timer {
         const displayText = seconds.toString();
         
         // Draw the timer
-        this.context.fillText(displayText, 
-            this.canvas.width / 2, 
-            this.canvas.height / 2
-        );
-        
-        // Add glow effect
-        this.context.shadowColor = '#4444ff';
-        this.context.shadowBlur = 30;
-        this.context.fillStyle = '#ffffff';
         this.context.fillText(displayText, 
             this.canvas.width / 2, 
             this.canvas.height / 2
