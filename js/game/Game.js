@@ -8,6 +8,7 @@ import { Ball } from './Ball.js';
 import { SoundManager } from '../audio/SoundManager.js';
 import { StartButton } from '../ui/StartButton.js';
 import { ScoreDisplay } from '../ui/ScoreDisplay.js';
+import { Timer } from '../ui/Timer.js';
 
 export class Game {
     constructor() {
@@ -18,7 +19,8 @@ export class Game {
         
         this.playerScore = 0;
         this.aiScore = 0;
-        
+        this.isGameStarted = false;
+
         this.playerGroup = new THREE.Group();
         this.scene.add(this.playerGroup);
         this.playerGroup.add(this.camera);
@@ -26,7 +28,8 @@ export class Game {
         // Initialize sound manager
         this.soundManager = new SoundManager();
 
-        this.isGameStarted = false;
+        // Initialize timer
+        this.timer = new Timer(this.scene, 30); // 30 seconds timer
 
         this.init();
         this.setupVR();
@@ -143,8 +146,15 @@ export class Game {
                         this.vrController.controllers[1].userData.isSelecting) {
                         this.startButton.press();
                         this.isGameStarted = true;
+                        // Reset scores when game starts
+                        this.playerScore = 0;
+                        this.aiScore = 0;
+                        this.playerScoreDisplay.updateScore(0);
+                        this.aiScoreDisplay.updateScore(0);
+                        // Start ball and timer
                         this.ball.start();
-                        this.startButton.hide(); // Hide button when game starts
+                        this.timer.start();
+                        this.startButton.hide();
                     }
                 } else {
                     this.startButton.unhighlight();
@@ -154,6 +164,14 @@ export class Game {
             if (this.isGameStarted) {
                 this.aiPaddle.updateAI(this.ball.getBall());
                 const collision = this.ball.update(delta, this.playerPaddle.getPaddle(), this.aiPaddle.getPaddle());
+
+                // Update timer
+                if (this.timer.update()) {
+                    // Timer finished
+                    this.isGameStarted = false;
+                    this.startButton.show();
+                    this.ball.reset();
+                }
 
                 // Handle collisions
                 if (collision === 'player') {
@@ -197,8 +215,13 @@ export class Game {
                             }
                         });
                     }
-                    this.isGameStarted = false;
-                    this.startButton.show();
+                    // Instead of ending the game, just reset and start the ball
+                    this.ball.reset();
+                    setTimeout(() => {
+                        if (this.isGameStarted) {  // Only start if game is still running
+                            this.ball.start();
+                        }
+                    }, 1000);  // Wait 1 second before respawning ball
                 }
 
                 const currentBallX = this.ball.getBall().position.x;
