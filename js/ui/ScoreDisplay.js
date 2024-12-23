@@ -22,7 +22,7 @@ export class ScoreDisplay {
         });
 
         // Create plane geometry for the score display
-        this.geometry = new THREE.PlaneGeometry(1, 1);
+        this.geometry = new THREE.PlaneGeometry(2, 2);
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         
         // Position and rotate the score display
@@ -45,12 +45,21 @@ export class ScoreDisplay {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
         // Set text properties
-        this.context.fillStyle = 'white';
-        this.context.font = 'bold 200px Arial';
+        this.context.fillStyle = '#4444ff';
+        this.context.font = 'bold 300px Arial';
         this.context.textAlign = 'center';
         this.context.textBaseline = 'middle';
         
         // Draw the score
+        this.context.fillText(this.score.toString(), 
+            this.canvas.width / 2, 
+            this.canvas.height / 2
+        );
+        
+        // Add glow effect
+        this.context.shadowColor = '#4444ff';
+        this.context.shadowBlur = 30;
+        this.context.fillStyle = '#ffffff';
         this.context.fillText(this.score.toString(), 
             this.canvas.width / 2, 
             this.canvas.height / 2

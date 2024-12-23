@@ -46,7 +46,7 @@ export class GameEnvironment {
             new THREE.BoxGeometry(0.1, 3, 4),
             wallMaterial
         );
-        leftWall.position.set(-2, 1.5, 0);
+        leftWall.position.set(-2, 1.5, -1);
         this.scene.add(leftWall);
 
         // Right wall
@@ -54,7 +54,7 @@ export class GameEnvironment {
             new THREE.BoxGeometry(0.1, 3, 4),
             wallMaterial
         );
-        rightWall.position.set(2, 1.5, 0);
+        rightWall.position.set(2, 1.5, -1);
         this.scene.add(rightWall);
     }
 

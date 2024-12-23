@@ -84,13 +84,13 @@ export class Game {
         // Initialize score displays
         this.playerScoreDisplay = new ScoreDisplay(
             this.scene,
-            new THREE.Vector3(-2, 1, -2.5),
+            new THREE.Vector3(-1.90, 1.5, -1),  // Moved further in front of left wall
             new THREE.Euler(0, Math.PI / 2, 0)
         );
         
         this.aiScoreDisplay = new ScoreDisplay(
             this.scene,
-            new THREE.Vector3(2, 1, -2.5),
+            new THREE.Vector3(1.90, 1.5, -1),   // Moved further in front of right wall
             new THREE.Euler(0, -Math.PI / 2, 0)
         );
     }
