@@ -3,9 +3,9 @@ import * as THREE from 'three';
 export class Ball {
     constructor(scene) {
         this.scene = scene;
-        this.initialSpeed = 0.005;
+        this.initialSpeed = 0.015;
         this.speedIncrease = 1.1;
-        this.maxSpeed = 0.03;
+        this.maxSpeed = 0.05;
         this.hits = 0;
         this.ballVelocity = new THREE.Vector3(0, 0, 0);
         this.speed = 1.5;
