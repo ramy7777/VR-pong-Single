@@ -57,12 +57,24 @@ export class SoundManager {
                     frequency: 12,
                     amplitude: 10
                 }
-            })
+            }),
+
+            // Background music: progressive synth pattern
+            backgroundMusic: this.createProgressiveMusic()
         };
+        
+        // Keep track of background music state
+        this.backgroundMusicPlaying = false;
+        this.currentMusicLoop = null;
+    }
+
+    // Convert MIDI note number to frequency
+    midiToFreq(midiNote) {
+        return 440 * Math.pow(2, (midiNote - 69) / 12);
     }
 
     createSound({ midiNote, duration, waveform, attack, decay, gain, pitchBend, vibrato }) {
-        const startFreq = 440 * Math.pow(2, (midiNote - 69) / 12);
+        const startFreq = this.midiToFreq(midiNote);
         
         return {
             play: () => {
@@ -79,7 +91,7 @@ export class SoundManager {
                 
                 // Add pitch bend if specified
                 if (pitchBend) {
-                    const endFreq = 440 * Math.pow(2, (pitchBend.endNote - 69) / 12);
+                    const endFreq = this.midiToFreq(pitchBend.endNote);
                     osc.frequency.linearRampToValueAtTime(endFreq, this.audioContext.currentTime + pitchBend.time);
                 }
 
@@ -132,7 +144,7 @@ export class SoundManager {
                         const osc = this.audioContext.createOscillator();
                         const gainNode = this.audioContext.createGain();
                         
-                        const frequency = 440 * Math.pow(2, (note - 69) / 12);
+                        const frequency = this.midiToFreq(note);
                         osc.type = 'sine';
                         osc.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
                         
@@ -167,7 +179,7 @@ export class SoundManager {
                         const osc = this.audioContext.createOscillator();
                         const gainNode = this.audioContext.createGain();
                         
-                        const frequency = 440 * Math.pow(2, (note - 69) / 12);
+                        const frequency = this.midiToFreq(note);
                         osc.type = 'sawtooth';
                         osc.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
                         
@@ -202,7 +214,7 @@ export class SoundManager {
                         const osc = this.audioContext.createOscillator();
                         const gainNode = this.audioContext.createGain();
                         
-                        const frequency = 440 * Math.pow(2, (note - 69) / 12);
+                        const frequency = this.midiToFreq(note);
                         osc.type = 'triangle';
                         osc.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
                         
@@ -219,6 +231,76 @@ export class SoundManager {
                 });
             }
         };
+    }
+
+    createProgressiveMusic() {
+        const bassline = [36, 36, 43, 41]; // C2, C2, G2, F2
+        const melody = [60, 64, 67, 69];   // C4, E4, G4, A4
+        const duration = 0.2;
+        const noteGap = 0.1;
+        
+        return {
+            play: () => {
+                if (this.backgroundMusicPlaying) return;
+                this.backgroundMusicPlaying = true;
+                
+                const playNote = (noteIndex) => {
+                    if (!this.backgroundMusicPlaying) return;
+                    
+                    // Play bassline
+                    const bassOsc = this.audioContext.createOscillator();
+                    const bassGain = this.audioContext.createGain();
+                    bassOsc.connect(bassGain);
+                    bassGain.connect(this.audioContext.destination);
+                    
+                    bassOsc.type = 'sawtooth';
+                    bassOsc.frequency.value = this.midiToFreq(bassline[noteIndex]);
+                    bassGain.gain.value = 0.15;
+                    
+                    bassOsc.start();
+                    bassGain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
+                    bassOsc.stop(this.audioContext.currentTime + duration);
+                    
+                    // Play melody
+                    const melodyOsc = this.audioContext.createOscillator();
+                    const melodyGain = this.audioContext.createGain();
+                    melodyOsc.connect(melodyGain);
+                    melodyGain.connect(this.audioContext.destination);
+                    
+                    melodyOsc.type = 'sine';
+                    melodyOsc.frequency.value = this.midiToFreq(melody[noteIndex]);
+                    melodyGain.gain.value = 0.1;
+                    
+                    melodyOsc.start();
+                    melodyGain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
+                    melodyOsc.stop(this.audioContext.currentTime + duration);
+                    
+                    // Schedule next note
+                    if (this.backgroundMusicPlaying) {
+                        this.currentMusicLoop = setTimeout(() => {
+                            playNote((noteIndex + 1) % bassline.length);
+                        }, (duration + noteGap) * 1000);
+                    }
+                };
+                
+                playNote(0);
+            },
+            stop: () => {
+                this.backgroundMusicPlaying = false;
+                if (this.currentMusicLoop) {
+                    clearTimeout(this.currentMusicLoop);
+                    this.currentMusicLoop = null;
+                }
+            }
+        };
+    }
+    
+    startBackgroundMusic() {
+        this.sounds.backgroundMusic.play();
+    }
+    
+    stopBackgroundMusic() {
+        this.sounds.backgroundMusic.stop();
     }
 
     playPaddleHit() {

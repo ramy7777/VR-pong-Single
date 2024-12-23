@@ -155,8 +155,8 @@ export class Game {
                         
                         this.ball.start();
                         this.timer.start();
-                        // Play point sound instead of start sound
-                        this.soundManager.playPoint();
+                        // Start background music
+                        this.soundManager.startBackgroundMusic();
                         this.startButton.hide();
                     }
                 } else {
@@ -197,12 +197,21 @@ export class Game {
                             }
                         });
                     }
-                } else if (collision === 'player_score') {
-                    // Player scores (ball went past AI's bounds)
-                    this.playerScore++;
-                    this.playerScoreDisplay.updateScore(this.playerScore);
-                    this.environment.flashRail('right');  // Flash right rail
+                } else if (collision === 'player_score' || collision === 'ai_score') {
+                    // Stop music when ball goes out of bounds
+                    this.soundManager.stopBackgroundMusic();
                     
+                    if (collision === 'player_score') {
+                        this.playerScore++;
+                        this.playerScoreDisplay.updateScore(this.playerScore);
+                        this.environment.flashRail('right');
+                    } else {
+                        this.aiScore++;
+                        this.aiScoreDisplay.updateScore(this.aiScore);
+                        this.environment.flashRail('left');
+                    }
+
+                    // Play out of bounds sound and trigger haptics
                     this.soundManager.playLose();
                     const session = this.renderer.xr.getSession();
                     if (session) {
@@ -212,31 +221,12 @@ export class Game {
                             }
                         });
                     }
-                    // Reset and start the ball after a delay
-                    setTimeout(() => {
-                        if (this.isGameStarted) {
-                            this.ball.start();
-                        }
-                    }, 1000);
-                } else if (collision === 'ai_score') {
-                    // AI scores (ball went past player's bounds)
-                    this.aiScore++;
-                    this.aiScoreDisplay.updateScore(this.aiScore);
-                    this.environment.flashRail('left');  // Flash left rail
                     
-                    this.soundManager.playLose();
-                    const session = this.renderer.xr.getSession();
-                    if (session) {
-                        session.inputSources.forEach(inputSource => {
-                            if (inputSource.handedness === 'right' && inputSource.gamepad?.hapticActuators?.[0]) {
-                                inputSource.gamepad.hapticActuators[0].pulse(0.7, 100);
-                            }
-                        });
-                    }
-                    // Reset and start the ball after a delay
+                    // Restart ball and music after a short delay
                     setTimeout(() => {
                         if (this.isGameStarted) {
                             this.ball.start();
+                            this.soundManager.startBackgroundMusic();
                         }
                     }, 1000);
                 }
