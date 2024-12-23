@@ -7,6 +7,7 @@ import { Paddle } from './Paddle.js';
 import { Ball } from './Ball.js';
 import { SoundManager } from '../audio/SoundManager.js';
 import { StartButton } from '../ui/StartButton.js';
+import { ScoreDisplay } from '../ui/ScoreDisplay.js';
 
 export class Game {
     constructor() {
@@ -14,6 +15,9 @@ export class Game {
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.clock = new THREE.Clock();
+        
+        this.playerScore = 0;
+        this.aiScore = 0;
         
         this.playerGroup = new THREE.Group();
         this.scene.add(this.playerGroup);
@@ -76,6 +80,19 @@ export class Game {
         // Track previous ball position for sound triggers
         this.prevBallZ = this.ball.getBall().position.z;
         this.prevBallX = this.ball.getBall().position.x;
+
+        // Initialize score displays
+        this.playerScoreDisplay = new ScoreDisplay(
+            this.scene,
+            new THREE.Vector3(-2, 1, -2.5),
+            new THREE.Euler(0, Math.PI / 2, 0)
+        );
+        
+        this.aiScoreDisplay = new ScoreDisplay(
+            this.scene,
+            new THREE.Vector3(2, 1, -2.5),
+            new THREE.Euler(0, -Math.PI / 2, 0)
+        );
     }
 
     triggerPaddleHaptics(intensity = 1.0, duration = 100) {
@@ -160,6 +177,17 @@ export class Game {
                         });
                     }
                 } else if (collision === 'score') {
+                    // Check which side scored based on ball position
+                    if (this.ball.getBall().position.z > 0) {
+                        // AI scores
+                        this.aiScore++;
+                        this.aiScoreDisplay.updateScore(this.aiScore);
+                    } else {
+                        // Player scores
+                        this.playerScore++;
+                        this.playerScoreDisplay.updateScore(this.playerScore);
+                    }
+                    
                     this.soundManager.playLose();
                     const session = this.renderer.xr.getSession();
                     if (session) {
