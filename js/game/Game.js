@@ -53,15 +53,7 @@ export class Game {
     setupVR() {
         this.renderer.xr.addEventListener('sessionstart', () => {
             console.log('Setting up VR session');
-            
-            const referenceSpace = this.renderer.xr.getReferenceSpace();
-            const transform = new THREE.XRRigidTransform(
-                { x: 0, y: 0, z: -0.4 },
-                { x: 0, y: 0, z: 0, w: 1 }
-            );
-            this.renderer.xr.setReferenceSpace(
-                referenceSpace.getOffsetReferenceSpace(transform)
-            );
+            // Removed problematic transform code
         });
 
         this.vrController = new VRController(this.renderer, this.playerGroup);
@@ -149,11 +141,22 @@ export class Game {
                         // Reset scores when game starts
                         this.playerScore = 0;
                         this.aiScore = 0;
-                        this.playerScoreDisplay.updateScore(0);
-                        this.aiScoreDisplay.updateScore(0);
-                        // Start ball and timer
+                        
+                        // Add strong haptic feedback when pressing start
+                        const session = this.renderer.xr.getSession();
+                        if (session) {
+                            session.inputSources.forEach(inputSource => {
+                                if (inputSource.handedness === 'right' && inputSource.gamepad?.hapticActuators?.[0]) {
+                                    // Strong, short pulse for button press
+                                    inputSource.gamepad.hapticActuators[0].pulse(1.0, 50);
+                                }
+                            });
+                        }
+                        
                         this.ball.start();
                         this.timer.start();
+                        // Play point sound instead of start sound
+                        this.soundManager.playPoint();
                         this.startButton.hide();
                     }
                 } else {
