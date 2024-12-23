@@ -45,6 +45,8 @@ export class ScoreDisplay {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
         // Set text properties
+        this.context.shadowColor = '#4444ff';
+        this.context.shadowBlur = 15;  // Subtle glow
         this.context.fillStyle = '#ffffff';
         this.context.font = 'bold 200px Arial';
         this.context.textAlign = 'center';

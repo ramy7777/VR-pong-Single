@@ -29,7 +29,7 @@ export class Game {
         this.soundManager = new SoundManager();
 
         // Initialize timer
-        this.timer = new Timer(this.scene, 30); // 30 seconds timer
+        this.timer = new Timer(this.scene, 120); // 2 minutes timer
 
         this.init();
         this.setupVR();

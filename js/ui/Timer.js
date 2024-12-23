@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 export class Timer {
-    constructor(scene, duration = 30) {
+    constructor(scene, duration = 120) {
         this.scene = scene;
         this.duration = duration;
         this.timeLeft = duration;
@@ -78,14 +78,17 @@ export class Timer {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
         // Set text properties
+        this.context.shadowColor = '#4444ff';
+        this.context.shadowBlur = 15;  // Subtle glow
         this.context.fillStyle = '#ffffff';
         this.context.font = 'bold 200px Arial';  // Same font size as score display
         this.context.textAlign = 'center';
         this.context.textBaseline = 'middle';
         
         // Format time as MM:SS
-        const seconds = Math.ceil(this.timeLeft);
-        const displayText = seconds.toString();
+        const minutes = Math.floor(this.timeLeft / 60);
+        const seconds = Math.ceil(this.timeLeft % 60);
+        const displayText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
         
         // Draw the timer
         this.context.fillText(displayText, 
