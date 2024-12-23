@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 
 export class ScoreDisplay {
-    constructor(scene, position, rotation) {
+    constructor(scene, position, rotation, label = '') {
         this.score = 0;
         this.scene = scene;
+        this.label = label;
 
         // Create canvas for the score texture
         this.canvas = document.createElement('canvas');
@@ -44,13 +45,29 @@ export class ScoreDisplay {
         // Clear the canvas
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Set text properties
-        this.context.shadowColor = '#4444ff';
-        this.context.shadowBlur = 15;  // Subtle glow
+        // Set text properties for the label
+        if (this.label) {
+            this.context.fillStyle = '#ffffff';
+            this.context.font = 'bold 60px Arial';  // Smaller font for label
+            this.context.textAlign = 'center';
+            this.context.textBaseline = 'middle';
+            this.context.shadowColor = '#4444ff';
+            this.context.shadowBlur = 15;
+            
+            // Draw the label above the score
+            this.context.fillText(this.label, 
+                this.canvas.width / 2, 
+                this.canvas.height / 4  // Position label above score
+            );
+        }
+        
+        // Set text properties for score
         this.context.fillStyle = '#ffffff';
         this.context.font = 'bold 200px Arial';
         this.context.textAlign = 'center';
         this.context.textBaseline = 'middle';
+        this.context.shadowColor = '#4444ff';
+        this.context.shadowBlur = 15;
         
         // Draw the score
         this.context.fillText(this.score.toString(), 
