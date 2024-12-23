@@ -167,6 +167,17 @@ export class Game {
             if (this.isGameStarted) {
                 this.aiPaddle.updateAI(this.ball.getBall());
                 const collision = this.ball.update(delta, this.playerPaddle.getPaddle(), this.aiPaddle.getPaddle());
+                
+                // Update music speed based on ball speed
+                if (this.isGameStarted && this.ball) {
+                    const ballSpeed = Math.sqrt(
+                        this.ball.ballVelocity.x * this.ball.ballVelocity.x + 
+                        this.ball.ballVelocity.z * this.ball.ballVelocity.z
+                    );
+                    // Scale down the speed factor to make acceleration more gradual
+                    const normalizedSpeed = 1.0 + (ballSpeed / this.ball.initialSpeed - 1.0) * 0.3; 
+                    this.soundManager.updateMusicSpeed(normalizedSpeed);
+                }
 
                 // Update timer
                 if (this.timer.update()) {

@@ -236,8 +236,9 @@ export class SoundManager {
     createProgressiveMusic() {
         const bassline = [36, 36, 43, 41]; // C2, C2, G2, F2
         const melody = [60, 64, 67, 69];   // C4, E4, G4, A4
-        const duration = 0.2;
-        const noteGap = 0.1;
+        const baseNoteDuration = 0.2;
+        const baseNoteGap = 0.1;
+        let currentSpeed = 1.0;
         
         return {
             play: () => {
@@ -246,6 +247,10 @@ export class SoundManager {
                 
                 const playNote = (noteIndex) => {
                     if (!this.backgroundMusicPlaying) return;
+                    
+                    // Calculate current duration based on speed
+                    const duration = baseNoteDuration / currentSpeed;
+                    const noteGap = baseNoteGap / currentSpeed;
                     
                     // Play bassline
                     const bassOsc = this.audioContext.createOscillator();
@@ -291,6 +296,9 @@ export class SoundManager {
                     clearTimeout(this.currentMusicLoop);
                     this.currentMusicLoop = null;
                 }
+            },
+            setSpeed: (speed) => {
+                currentSpeed = Math.max(1.0, Math.min(3.0, speed)); // Clamp between 1.0 and 3.0
             }
         };
     }
@@ -301,6 +309,12 @@ export class SoundManager {
     
     stopBackgroundMusic() {
         this.sounds.backgroundMusic.stop();
+    }
+
+    updateMusicSpeed(speed) {
+        if (this.sounds.backgroundMusic) {
+            this.sounds.backgroundMusic.setSpeed(speed);
+        }
     }
 
     playPaddleHit() {
