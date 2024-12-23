@@ -80,7 +80,7 @@ export class Ball {
         
         // Create a slightly larger box for edge detection
         const edgeBox = paddleBox.clone();
-        edgeBox.expandByScalar(0.02);  // Add a small buffer zone around the paddle
+        edgeBox.expandByScalar(0.03);  // Increased buffer zone from 0.02 to 0.03
         
         if (ballBox.intersectsBox(edgeBox)) {
             // Calculate where on the paddle the ball hit
@@ -91,13 +91,17 @@ export class Ball {
             const relativeX = hitPoint.x - paddleCenter.x;
             const relativeZ = hitPoint.z - paddleCenter.z;
             
-            // Determine if it's an edge hit
-            const isEdgeHit = Math.abs(relativeX) > (paddle.scale.x * 0.4);
+            // Increased edge detection zone and added overlap check
+            const edgeZone = paddle.scale.x * 0.45; // Increased from 0.4 to 0.45
+            const isEdgeHit = Math.abs(relativeX) > edgeZone;
             
-            if (isEdgeHit) {
+            // Additional check for edge overlap
+            const edgeOverlap = Math.abs(relativeX) - edgeZone;
+            if (isEdgeHit && edgeOverlap < 0.05) { // Only count edge hits within a reasonable range
                 // Edge hit - reflect with a steeper angle and slight speed reduction
-                const normalizedHitPoint = relativeX / (paddle.scale.x * 0.5);
-                const deflectionAngle = normalizedHitPoint * (Math.PI / 3); // Up to 60 degrees
+                const normalizedHitPoint = (relativeX / (paddle.scale.x * 0.5));
+                const clampedHitPoint = Math.min(Math.max(normalizedHitPoint, -0.9), 0.9); // Prevent extreme angles
+                const deflectionAngle = clampedHitPoint * (Math.PI / 3); // Up to 60 degrees
                 
                 // Maintain some of the original velocity but add strong sideways component
                 const speed = this.ballVelocity.length() * 0.9; // Slight speed reduction
