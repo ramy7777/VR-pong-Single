@@ -12,6 +12,10 @@ export class Paddle {
         this.lastPredictedX = 0;
         this.lastUpdateTime = 0;
         this.updateInterval = 30; // Update even more frequently (was 40)
+        this.initialSpeed = 0.015;
+        this.currentSpeed = this.initialSpeed;
+        this.speedIncrement = 0.001; // Small increment for AI speed
+        this.maxSpeed = 0.04; // Increased maximum speed to 0.04
         this.createPaddle();
     }
 
